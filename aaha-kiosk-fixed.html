@@ -709,7 +709,7 @@ function speak(text, onWord, onEnd){
   try{
     window.speechSynthesis.cancel();
     const utter = new SpeechSynthesisUtterance(text);
-    utter.rate = 0.90; // Slower rate for clear pronunciation (was 0.98)
+    utter.rate = 0.80; // Much slower rate for crystal clear pronunciation
     utter.pitch = 1.05;
     utter.volume = 1.0; // Full volume
     const voices = window.speechSynthesis.getVoices();
@@ -737,15 +737,16 @@ function detectLanguage(text){
 
 /* ============================= SCREEN 1: SPLASH -> SCREEN 2: AAHA INTRO (speaks, 30s) ============================= */
 let videoAdvanceTimer=null, captionCycleTimer=null;
-const INTRO_DURATION = 40000; // AAHA "speaks" for exactly 40 seconds
+const INTRO_DURATION = 42000; // AAHA "speaks" for exactly 42 seconds
 const INTRO_LINES = [
-  { main:'🙏 "Namaste! Main AAHA hoon — aapka AI Health Agent. AAHA Healthcare Kiosk mein aapka hardik swagat hai."', sub:'Welcome to AAHA Healthcare Kiosk - Your AI-powered health companion', duration: 6000 },
-  { main:'"Main sirf sawalon ke jawab dene ke liye nahi, balki aapki health journey ko samajhne aur guide karne ke liye yahan hoon."', sub:'I am here to understand and guide your complete health journey', duration: 6000 },
-  { main:'"Main aapse Hindi, English aur anya supported bhashaon mein baat kar sakta hoon. Aap jis bhasha mein comfortable hain, usi mein baat kijiye."', sub:'Speak in your preferred language - Hindi, English, or any supported Indian language', duration: 6500 },
-  { main:'"Sabse pehle main aapse kuch health-related sawal puchhunga. Aapke jawab ke aadhar par main health assessment karunga aur zarurat ke anusaar appropriate tests recommend karunga."', sub:'I will ask health questions and recommend appropriate tests based on your responses', duration: 7000 },
-  { main:'"Yadi medical devices connected hain, to Blood Pressure, Pulse Oximeter, ECG aur anya health parameters ka data bhi is kiosk ke madhyam se collect kiya ja sakta hai."', sub:'Connected medical devices can measure BP, SpO2, ECG and other vital parameters', duration: 6500 },
-  { main:'"Assessment ke baad main ek digital health report taiyaar karunga, jise doctor ya healthcare professional ke saath aasani se share kiya ja sakta hai."', sub:'You will receive a digital health report that can be easily shared with doctors', duration: 6000 },
-  { main:'"Toh chaliye shuru karte hain. Sabse pehle, kripya batayiye — aaj aap kis wajah se health check-up karwana chahte hain?"', sub:'Let\'s begin - Please tell me why you want a health check-up today', duration: 5000 }
+  { main:'🙏 "Namaste! Main AAHA hoon. Aapka swagat hai."', sub:'Welcome! I am AAHA - Your AI Health Agent', duration: 5000 },
+  { main:'"Main aapki sehat ki poori jaanch karunga."', sub:'I will conduct your complete health screening', duration: 5000 },
+  { main:'"Aap Hindi ya English mein baat kar sakte hain."', sub:'You can speak in Hindi or English', duration: 5500 },
+  { main:'"Main aapse kuch sawal puchhunga."', sub:'I will ask you some health questions', duration: 5000 },
+  { main:'"Aapke jawab sunkar main zaruri tests suggest karunga."', sub:'Based on your answers, I will suggest necessary tests', duration: 6000 },
+  { main:'"BP, oxygen, ECG — sab automatic check hoga."', sub:'BP, oxygen, ECG - all will be checked automatically', duration: 5500 },
+  { main:'"Aapko complete health report milegi."', sub:'You will receive a complete health report', duration: 5000 },
+  { main:'"Chaliye shuru karte hain. Aaj aap kyun aaye hain?"', sub:'Let\'s begin. Why did you come today?', duration: 5000 }
 ];
 function playIntroVideo(){
   clearTimeout(videoAdvanceTimer); clearInterval(captionCycleTimer);

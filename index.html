@@ -442,6 +442,7 @@ canvas{width:100%; height:220px; border-radius:16px; background:rgba(0,0,0,0.35)
     </div></div>
     <div style="font-size:48px; font-weight:900; letter-spacing:2px; margin-top:10px;">AAHA</div>
     <div style="font-size:16px; color:var(--muted); font-weight:600; letter-spacing:3px; margin-top:6px;">AI HEALTH SCREENING KIOSK</div>
+    <div style="margin-top:40px; font-size:14px; color:var(--muted); animation: blink 2s infinite;">Tap anywhere to continue</div>
   </section>
 
   <!-- SCREEN 2: PRE-RECORDED AAHA VIDEO (5-10 seconds) -->
@@ -824,12 +825,21 @@ $('#btn-skip-video').addEventListener('click', finishIntroVideo);
 
 function startKiosk(){
   goTo('screen-splash');
-  // Screen 1: Show attractive AAHA logo for 3 seconds
-  setTimeout(()=>{ 
+  
+  // Allow manual click/tap to proceed immediately
+  let proceeded = false;
+  const proceedToVideo = () => {
+    if(proceeded) return;
+    proceeded = true;
     $('#topbar').classList.add('visible'); 
-    // Screen 2: Move to pre-recorded AAHA video (5-10 sec)
-    goTo('screen-video'); 
-  }, 3000);
+    goTo('screen-video');
+  };
+  
+  // Click anywhere on splash screen to continue
+  $('#screen-splash').addEventListener('click', proceedToVideo, {once: true});
+  
+  // Screen 1: Auto-transition after 3 seconds
+  setTimeout(proceedToVideo, 3000);
 }
 startKiosk();
 

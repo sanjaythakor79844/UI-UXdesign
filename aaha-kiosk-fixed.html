@@ -737,15 +737,15 @@ function detectLanguage(text){
 
 /* ============================= SCREEN 1: SPLASH -> SCREEN 2: AAHA INTRO (speaks, 30s) ============================= */
 let videoAdvanceTimer=null, captionCycleTimer=null;
-const INTRO_DURATION = 30000; // AAHA "speaks" for exactly 30 seconds
+const INTRO_DURATION = 40000; // AAHA "speaks" for exactly 40 seconds
 const INTRO_LINES = [
-  { main:'"Namaste! Main AAHA hoon — aapka AI Health Agent."', sub:'I am your AI-powered health screening agent at this kiosk', duration: 5000 },
-  { main:'"Main ek smart kiosk hoon jo aapki sehat ki jaanch karta hai."', sub:'An intelligent kiosk system for comprehensive health screening', duration: 4500 },
-  { main:'"Aap apni bhasha mein baat kar sakte hain — Hindi, English, Tamil, Telugu."', sub:'Speak in your preferred language - I understand all Indian languages', duration: 5000 },
-  { main:'"Main aapke symptoms sunkar zaruri tests recommend karunga."', sub:'I analyze your symptoms and recommend necessary medical tests', duration: 4500 },
-  { main:'"BP, oxygen level, ECG — sab kuch yahaan automatically check hoga."', sub:'Blood pressure, oxygen, ECG - all automated at this kiosk', duration: 4500 },
-  { main:'"Medical devices se aapka complete checkup hoga, instant report milegi."', sub:'Medical devices provide complete checkup with instant AI report', duration: 4500 },
-  { main:'"Chaliye shuru karte hain — main aapki madad ke liye taiyaar hoon."', sub:'Let\'s begin — I am here to help with your health screening', duration: 4000 }
+  { main:'🙏 "Namaste! Main AAHA hoon — aapka AI Health Agent. AAHA Healthcare Kiosk mein aapka hardik swagat hai."', sub:'Welcome to AAHA Healthcare Kiosk - Your AI-powered health companion', duration: 6000 },
+  { main:'"Main sirf sawalon ke jawab dene ke liye nahi, balki aapki health journey ko samajhne aur guide karne ke liye yahan hoon."', sub:'I am here to understand and guide your complete health journey', duration: 6000 },
+  { main:'"Main aapse Hindi, English aur anya supported bhashaon mein baat kar sakta hoon. Aap jis bhasha mein comfortable hain, usi mein baat kijiye."', sub:'Speak in your preferred language - Hindi, English, or any supported Indian language', duration: 6500 },
+  { main:'"Sabse pehle main aapse kuch health-related sawal puchhunga. Aapke jawab ke aadhar par main health assessment karunga aur zarurat ke anusaar appropriate tests recommend karunga."', sub:'I will ask health questions and recommend appropriate tests based on your responses', duration: 7000 },
+  { main:'"Yadi medical devices connected hain, to Blood Pressure, Pulse Oximeter, ECG aur anya health parameters ka data bhi is kiosk ke madhyam se collect kiya ja sakta hai."', sub:'Connected medical devices can measure BP, SpO2, ECG and other vital parameters', duration: 6500 },
+  { main:'"Assessment ke baad main ek digital health report taiyaar karunga, jise doctor ya healthcare professional ke saath aasani se share kiya ja sakta hai."', sub:'You will receive a digital health report that can be easily shared with doctors', duration: 6000 },
+  { main:'"Toh chaliye shuru karte hain. Sabse pehle, kripya batayiye — aaj aap kis wajah se health check-up karwana chahte hain?"', sub:'Let\'s begin - Please tell me why you want a health check-up today', duration: 5000 }
 ];
 function playIntroVideo(){
   clearTimeout(videoAdvanceTimer); clearInterval(captionCycleTimer);

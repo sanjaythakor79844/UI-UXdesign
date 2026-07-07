@@ -715,13 +715,13 @@ function detectLanguage(text){
 let videoAdvanceTimer=null, captionCycleTimer=null;
 const INTRO_DURATION = 30000; // AAHA "speaks" for exactly 30 seconds
 const INTRO_LINES = [
-  { main:'"Namaste! Main AAHA hoon — AI Health Assistant."', sub:'Your 24/7 health companion at Primary Health Centre', duration: 5000 },
-  { main:'"Main aapki sehat ki jaanch mein madad karungi."', sub:'I will help you with your health screening today', duration: 4500 },
-  { main:'"Sirf 30 seconds mein complete health check ho jaayega."', sub:'Complete health screening in just 30 seconds', duration: 4500 },
-  { main:'"Aap Hindi, English, Tamil ya Telugu mein baat kar sakte hain."', sub:'Speak in your preferred language - Hindi, English, Tamil, Telugu', duration: 5000 },
-  { main:'"Main aapke symptoms sunkar AI se instant report dungi."', sub:'AI-powered health assessment based on your symptoms', duration: 4500 },
-  { main:'"Blood pressure, oxygen level, aur zaruri tests bhi karenge."', sub:'We will check BP, SpO2, and other necessary medical tests', duration: 4500 },
-  { main:'"Chaliye shuru karte hain — aapki sehat hamari zimmedari hai."', sub:'Let\'s begin your health journey — your wellness is our priority', duration: 4000 }
+  { main:'"Namaste! Main AAHA hoon — aapka AI Health Agent."', sub:'I am your AI-powered health screening agent at this kiosk', duration: 5000 },
+  { main:'"Main ek smart kiosk hoon jo aapki sehat ki jaanch karta hai."', sub:'An intelligent kiosk system for comprehensive health screening', duration: 4500 },
+  { main:'"Aap apni bhasha mein baat kar sakte hain — Hindi, English, Tamil, Telugu."', sub:'Speak in your preferred language - I understand all Indian languages', duration: 5000 },
+  { main:'"Main aapke symptoms sunkar zaruri tests recommend karunga."', sub:'I analyze your symptoms and recommend necessary medical tests', duration: 4500 },
+  { main:'"BP, oxygen level, ECG — sab kuch yahaan automatically check hoga."', sub:'Blood pressure, oxygen, ECG - all automated at this kiosk', duration: 4500 },
+  { main:'"Medical devices se aapka complete checkup hoga, instant report milegi."', sub:'Medical devices provide complete checkup with instant AI report', duration: 4500 },
+  { main:'"Chaliye shuru karte hain — main aapki madad ke liye taiyaar hoon."', sub:'Let\'s begin — I am here to help with your health screening', duration: 4000 }
 ];
 function playIntroVideo(){
   clearTimeout(videoAdvanceTimer); clearInterval(captionCycleTimer);

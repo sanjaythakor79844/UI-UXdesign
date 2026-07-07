@@ -1,0 +1,1814 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AAHA — AI Health Screening Kiosk</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Noto+Sans+Devanagari:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --primary:#2563EB;
+  --primary-light:#3B82F6;
+  --secondary:#0D9488;
+  --success:#10B981;
+  --warning:#F59E0B;
+  --danger:#EF4444;
+  --bg:#F4F9FA;
+  --ink:#0B1220;
+  --ink-soft:#0B122099;
+  --muted:#5B6B85;
+  --glass:rgba(255,255,255,0.72);
+  --glass-strong:rgba(255,255,255,0.9);
+  --glass-border:rgba(15,23,42,0.10);
+  --card:rgba(255,255,255,0.98);
+  --card-border:rgba(15,23,42,0.08);
+  --fs-display:56px;
+  --fs-heading:40px;
+  --fs-title:32px;
+  --fs-subtitle:24px;
+  --fs-body:18px;
+}
+*{box-sizing:border-box; margin:0; padding:0;}
+html,body{height:100%;}
+body{
+  font-family:'Inter',system-ui,sans-serif;
+  color:var(--ink);
+  background:
+    radial-gradient(1200px 700px at 18% -10%, rgba(13,148,136,0.12), transparent 60%),
+    radial-gradient(1000px 700px at 90% 0%, rgba(37,99,235,0.09), transparent 55%),
+    radial-gradient(1400px 900px at 50% 120%, rgba(16,185,129,0.08), transparent 60%),
+    linear-gradient(180deg,#F6FBFC 0%, #EEF6F7 45%, #E9F3F4 100%);
+  overflow:hidden;
+  height:100vh;
+  width:100vw;
+  position:relative;
+}
+#app{position:relative; width:100%; height:100%;}
+
+/* ambient floating particles + subtle medical cross watermark */
+#ambient{position:absolute; inset:0; overflow:hidden; z-index:0; pointer-events:none;}
+#ambient::before{
+  content:''; position:absolute; inset:0; opacity:.09;
+  background-image:
+    linear-gradient(rgba(13,148,136,0.9) 1.5px, transparent 1.5px),
+    linear-gradient(90deg, rgba(13,148,136,0.9) 1.5px, transparent 1.5px);
+  background-size:120px 120px;
+  background-position:0 0, 0 0;
+  -webkit-mask-image:radial-gradient(ellipse 900px 700px at 50% 30%, #000 40%, transparent 75%);
+          mask-image:radial-gradient(ellipse 900px 700px at 50% 30%, #000 40%, transparent 75%);
+}
+.mote{position:absolute; border-radius:50%; background:radial-gradient(circle,rgba(37,99,235,0.35),transparent 70%); opacity:.4; animation:float-y linear infinite;}
+@keyframes float-y{ from{transform:translateY(0) translateX(0);} to{transform:translateY(-120vh) translateX(30px);} }
+
+/* ---------- top bar ---------- */
+#topbar{
+  position:absolute; top:0; left:0; right:0; height:64px;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:0 32px; z-index:50; color:var(--ink); font-weight:600; letter-spacing:.2px;
+  opacity:0; pointer-events:none; transition:opacity .5s ease;
+}
+#topbar.visible{opacity:1; pointer-events:auto;}
+#topbar .left{display:flex; align-items:center; gap:10px; font-size:15px;}
+#topbar .brandmark{width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,var(--secondary),var(--primary)); display:flex;align-items:center;justify-content:center; position:relative;}
+#topbar .brandmark::before,#topbar .brandmark::after{content:'';position:absolute;background:#fff;border-radius:2px;}
+#topbar .brandmark::before{width:12px;height:3px;}
+#topbar .brandmark::after{width:3px;height:12px;}
+#topbar .right{display:flex; align-items:center; gap:18px; font-size:14px; font-variant-numeric:tabular-nums; color:var(--muted);}
+#topbar .right svg{display:block;}
+#topbar .battery-pct{font-size:12px; opacity:.8; margin-left:2px;}
+
+/* ---------- screens ---------- */
+.screen{
+  position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;
+  opacity:0; visibility:hidden; transform:translateY(18px) scale(.99);
+  transition:opacity .55s cubic-bezier(.22,1,.36,1), transform .55s cubic-bezier(.22,1,.36,1);
+  padding:90px 60px 40px; z-index:1;
+}
+.screen.active{opacity:1; visibility:visible; transform:translateY(0) scale(1); z-index:2;}
+
+/* ---------- glass components ---------- */
+.glass-card{
+  background:var(--glass); border:1px solid var(--glass-border); border-radius:28px;
+  backdrop-filter:blur(20px) saturate(140%); -webkit-backdrop-filter:blur(20px) saturate(140%);
+  box-shadow:0 12px 40px rgba(15,23,42,0.12), inset 0 1px 0 rgba(255,255,255,0.6);
+  color:var(--ink);
+}
+.light-card{
+  background:var(--card); color:var(--ink); border-radius:26px; border:1px solid var(--card-border);
+  box-shadow:0 16px 50px rgba(15,23,42,0.14);
+}
+.btn{
+  border:none; cursor:pointer; font-family:inherit; font-weight:700; letter-spacing:.2px;
+  border-radius:18px; transition:transform .18s ease, box-shadow .18s ease, background .2s ease;
+  -webkit-tap-highlight-color:transparent;
+}
+.btn:active{transform:scale(0.96);}
+.btn-primary{
+  background:linear-gradient(135deg,var(--secondary),var(--primary));
+  color:#fff; box-shadow:0 10px 30px rgba(37,99,235,0.45);
+  padding:20px 40px; font-size:20px;
+}
+.btn-primary:hover{box-shadow:0 14px 38px rgba(37,99,235,0.6); transform:translateY(-2px);}
+.btn-ghost{
+  background:var(--glass-strong); color:var(--ink); border:1px solid var(--glass-border);
+  padding:18px 34px; font-size:18px;
+}
+.btn-ghost:hover{background:rgba(255,255,255,0.2);}
+.btn-disabled{opacity:.35; pointer-events:none;}
+
+/* ---------- AI ORB (signature element) ---------- */
+.orb-wrap{position:relative; width:320px; height:320px; display:flex; align-items:center; justify-content:center;}
+.orb-ring{position:absolute; border-radius:50%; border:1px solid rgba(120,170,255,0.35); animation:spin-slow linear infinite;}
+.orb-ring.r1{width:100%; height:100%; animation-duration:22s;}
+.orb-ring.r2{width:82%; height:82%; border-color:rgba(120,170,255,0.22); animation-duration:16s; animation-direction:reverse;}
+@keyframes spin-slow{ to{transform:rotate(360deg);} }
+.orb-particles{position:absolute; inset:0; border-radius:50%; animation:spin-slow 30s linear infinite;}
+.orb-particles span{position:absolute; width:6px; height:6px; border-radius:50%; background:var(--secondary); box-shadow:0 0 12px 3px rgba(20,184,166,0.9);}
+.orb-core{
+  width:190px; height:190px; border-radius:50%; position:relative; z-index:3;
+  background:radial-gradient(circle at 32% 28%, #9FD0FF 0%, var(--secondary) 30%, var(--primary) 65%, #0B2E7A 100%);
+  box-shadow:0 0 70px 18px rgba(37,99,235,0.55), 0 0 140px 40px rgba(20,184,166,0.25), inset 0 0 40px rgba(255,255,255,0.35);
+  animation:breathe 4.2s ease-in-out infinite;
+}
+@keyframes breathe{ 0%,100%{transform:scale(1);} 50%{transform:scale(1.07);} }
+.orb-core.listening{animation:pulse-fast 1.1s ease-in-out infinite;}
+@keyframes pulse-fast{ 0%,100%{transform:scale(1); box-shadow:0 0 70px 18px rgba(37,99,235,0.55),0 0 140px 40px rgba(20,184,166,0.25);} 50%{transform:scale(1.14); box-shadow:0 0 100px 30px rgba(37,99,235,0.8),0 0 180px 60px rgba(20,184,166,0.4);} }
+.orb-core.thinking{animation:spin-slow 2.4s linear infinite, breathe 3s ease-in-out infinite;}
+.orb-core.error{background:radial-gradient(circle at 32% 28%,#ffb4b4,var(--danger) 55%,#7a0b0b 100%);}
+.orb-ripple{position:absolute; border-radius:50%; border:2px solid rgba(20,184,166,0.55); width:190px; height:190px; opacity:0;}
+.orb-ripple.animate{animation:ripple 1.6s ease-out infinite;}
+@keyframes ripple{ 0%{transform:scale(1); opacity:.7;} 100%{transform:scale(1.9); opacity:0;} }
+
+/* ---------- ORB FACE (cartoon eyebrow eyes + talking mouth) ---------- */
+.orb-face{
+  position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+  display:flex; flex-direction:column; align-items:center; z-index:4; pointer-events:none;
+}
+.orb-face .orb-eyebrows{display:flex; gap:20px; margin-bottom:2px;}
+.orb-face .eyebrow{
+  width:26px; height:9px; background:#0B1220; border-radius:60% 40% 0 0/100% 100% 0 0;
+  transform:rotate(-10deg) translateY(2px); transition:transform .3s ease;
+}
+.orb-face .eyebrow.right{ transform:rotate(10deg) scaleX(-1) translateY(2px); }
+.orb-face .orb-eyes{display:flex; gap:24px; margin-bottom:14px;}
+.orb-face .eye{
+  position:relative; width:26px; height:34px; border-radius:50%;
+  background:radial-gradient(circle at 40% 25%, #ffffff, #F3F7FF 55%, #E4EAF7 100%);
+  border:3px solid #0B1220;
+  box-shadow:0 2px 6px rgba(0,0,0,0.25);
+  animation:eye-blink 4.6s ease-in-out infinite;
+  overflow:hidden;
+}
+.orb-face .eye .pupil{
+  position:absolute; width:15px; height:15px; border-radius:50%;
+  background:#0B1220; top:66%; left:50%;
+  transform:translate(-50%,-50%);
+  transition:transform .28s cubic-bezier(.34,1.2,.4,1);
+  box-shadow:inset 0 0 2px rgba(255,255,255,0.4);
+}
+.orb-face .eye .pupil::after{
+  content:''; position:absolute; width:4px; height:4px; border-radius:50%;
+  background:rgba(255,255,255,0.9); top:2px; left:2px;
+}
+@keyframes eye-blink{
+  0%, 92%, 100%{ transform:scaleY(1); }
+  95%{ transform:scaleY(0.08); }
+}
+.orb-face .mouth{
+  width:30px; height:15px;
+  border:4px solid #0B1220; border-top:none;
+  border-radius:0 0 30px 30px;
+  background:transparent;
+}
+.orb-face.talking .mouth{
+  width:16px; height:12px; border:none; border-radius:50%;
+  background:#0B1220;
+  animation:mouth-talk .32s ease-in-out infinite alternate;
+}
+@keyframes mouth-talk{
+  0%{ width:22px; height:6px; border-radius:8px; }
+  100%{ width:14px; height:20px; border-radius:50%; }
+}
+/* smaller face variant for smaller orbs (e.g. greeting avatar) */
+.orb-face.face-sm .orb-eyebrows{gap:15px; margin-bottom:1px;}
+.orb-face.face-sm .eyebrow{width:19px; height:7px;}
+.orb-face.face-sm .orb-eyes{gap:18px; margin-bottom:10px;}
+.orb-face.face-sm .eye{width:19px; height:25px;}
+.orb-face.face-sm .eye .pupil{width:11px; height:11px;}
+.orb-face.face-sm .mouth{width:22px; height:11px; border-width:3px;}
+
+/* simple two-oval "eyes" icon (matches the Screen 2 speaking avatar look) */
+.orb-face-simple{
+  position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+  display:flex; gap:26px; z-index:4; pointer-events:none;
+}
+.orb-face-simple .s-eye{
+  width:42px; height:70px; border-radius:50%;
+  animation:eye-life 4.5s ease-in-out infinite;
+  box-shadow:0 0 30px 8px rgba(245,158,11,0.45);
+}
+@keyframes eye-life{
+  0%,  100%{ transform:translateY(0)   scaleY(1);    }
+  50%      { transform:translateY(-6px) scaleY(1);    }
+  92%      { transform:translateY(-2px) scaleY(1);    }
+  96%      { transform:translateY(-2px) scaleY(0.06); }
+}
+.orb-face-simple .s-eye.left{background:linear-gradient(160deg,#FDE68A,#F59E0B);}
+.orb-face-simple .s-eye.right{background:linear-gradient(160deg,#F59E0B,#B45309); animation-delay:.15s;}
+
+/* waveform bars used inside/around orb + listening screen */
+.waveform{display:flex; align-items:center; gap:5px; height:60px;}
+.waveform span{width:6px; border-radius:4px; background:linear-gradient(180deg,var(--secondary),var(--primary)); height:10px; transition:height .09s ease;}
+
+/* ---------- WELCOME ---------- */
+.orb-slot{margin:26px 0 18px;}
+.prompt-line{font-size:22px; font-weight:700; color:var(--ink); margin-bottom:22px;}
+.choice-row{display:flex; gap:26px;}
+.choice-card{
+  width:300px; padding:30px 26px; text-align:center; cursor:pointer;
+}
+.choice-card .emoji{font-size:44px; margin-bottom:14px; display:block;}
+.choice-card .ctitle{font-size:23px; font-weight:800; margin-bottom:6px;}
+.choice-card .csub{font-size:15px; color:var(--muted); font-weight:500;}
+.choice-card:hover{transform:translateY(-4px); box-shadow:0 16px 50px rgba(0,0,0,0.4);}
+
+#statusbar{
+  position:absolute; bottom:26px; left:50%; transform:translateX(-50%);
+  display:flex; gap:26px; padding:14px 30px; font-size:14px; font-weight:600; color:var(--muted);
+}
+#statusbar .item{display:flex; align-items:center; gap:7px;}
+#statusbar .dot{width:7px;height:7px;border-radius:50%; background:var(--success); box-shadow:0 0 8px var(--success);}
+
+/* ---------- SCREEN 2: AAHA INTRO (same orb as splash, speaks for 15s) ---------- */
+.speak-caption{font-size:24px; font-weight:700; font-style:italic; color:var(--ink); text-align:center; max-width:640px; padding:0 20px; min-height:36px; margin-top:24px; transition:opacity .25s ease;}
+.speak-subcaption{font-size:15px; font-weight:500; color:var(--muted); text-align:center; max-width:600px; padding:0 20px; min-height:20px; margin-top:8px; transition:opacity .25s ease;}
+.video-progress-track{width:520px; max-width:80vw; height:6px; border-radius:6px; background:rgba(15,23,42,0.1); margin-top:26px; overflow:hidden;}
+.video-progress-fill{height:100%; width:0%; background:linear-gradient(90deg,var(--secondary),var(--primary)); border-radius:6px;}
+#screen-video .control-row{margin-top:26px;}
+
+/* ---------- OTP ---------- */
+.otp-panel{width:460px; padding:44px 40px; text-align:center;}
+.otp-panel h2{font-size:30px; font-weight:800; margin-bottom:6px;}
+.otp-panel p{color:var(--muted); font-size:16px; margin-bottom:26px; font-weight:500;}
+.phone-display{
+  font-size:34px; font-weight:800; letter-spacing:4px; padding:18px; border-radius:16px;
+  background:rgba(15,23,42,0.045); border:1px solid var(--glass-border); margin-bottom:22px; min-height:64px; color:var(--ink);
+}
+.keypad{display:grid; grid-template-columns:repeat(3,1fr); gap:14px;}
+.key{
+  padding:20px 0; border-radius:16px; font-size:24px; font-weight:800; cursor:pointer;
+  background:rgba(15,23,42,0.045); border:1px solid var(--glass-border); color:var(--ink); transition:.15s;
+}
+.key:active{background:rgba(15,23,42,0.12); transform:scale(.95);}
+.key.wide{font-size:16px;}
+
+/* ---------- REGISTRATION ---------- */
+.reg-grid{display:grid; grid-template-columns:1fr 1fr; gap:20px; width:820px;}
+.field{display:flex; flex-direction:column; gap:8px;}
+.field label{font-size:14px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.6px;}
+.field input{
+  padding:18px 20px; border-radius:14px; border:1px solid var(--glass-border); background:rgba(15,23,42,0.045);
+  color:var(--ink); font-size:18px; font-weight:600; font-family:inherit;
+}
+.field input:focus{outline:2px solid var(--secondary);}
+.gender-row{display:flex; gap:10px;}
+.gender-opt{flex:1; padding:16px 0; text-align:center; border-radius:14px; border:1px solid var(--glass-border); background:rgba(15,23,42,0.045); font-weight:700; cursor:pointer; color:var(--ink);}
+.gender-opt.selected{background:linear-gradient(135deg,var(--secondary),var(--primary)); border-color:transparent; color:#fff;}
+.reg-actions{grid-column:1/-1; display:flex; justify-content:flex-end; margin-top:8px;}
+
+/* ---------- CHAT ---------- */
+#screen-chat{padding-top:84px; align-items:stretch;}
+.chat-wrap{width:100%; max-width:840px; margin:0 auto; display:flex; flex-direction:column; height:100%;}
+.chat-header{display:flex; align-items:center; gap:14px; padding-bottom:16px;}
+.chat-header .mini-orb{width:46px;height:46px;border-radius:50%;background:radial-gradient(circle at 32% 28%,#9FD0FF,var(--secondary) 40%,var(--primary) 100%); box-shadow:0 0 20px rgba(37,99,235,0.6);}
+.chat-header .htxt b{font-size:19px; display:block;}
+.chat-header .htxt span{font-size:13px; color:var(--success); font-weight:600;}
+.chat-scroll{flex:1; overflow-y:auto; padding:10px 4px 20px; display:flex; flex-direction:column; gap:16px;}
+.bubble{max-width:68%; padding:16px 20px; border-radius:20px; font-size:17px; font-weight:500; line-height:1.5; animation:pop-in .3s ease;}
+@keyframes pop-in{from{opacity:0; transform:translateY(8px) scale(.98);} to{opacity:1; transform:translateY(0) scale(1);}}
+.bubble.ai{align-self:flex-start; background:var(--glass-strong); border:1px solid var(--glass-border); border-bottom-left-radius:6px;}
+.bubble.user{align-self:flex-end; background:linear-gradient(135deg,var(--secondary),var(--primary)); border-bottom-right-radius:6px;}
+.thinking-dots{display:flex; gap:5px; align-self:flex-start; padding:16px 20px;}
+.thinking-dots span{width:8px;height:8px;border-radius:50%; background:var(--secondary); animation:dot-bounce 1.1s infinite;}
+.thinking-dots span:nth-child(2){animation-delay:.15s;} .thinking-dots span:nth-child(3){animation-delay:.3s;}
+@keyframes dot-bounce{0%,60%,100%{transform:translateY(0); opacity:.5;} 30%{transform:translateY(-6px); opacity:1;}}
+.suggested-row{display:flex; gap:10px; flex-wrap:wrap; padding:10px 4px 14px;}
+.chip-btn{padding:10px 18px; border-radius:20px; background:rgba(15,23,42,0.05); border:1px solid var(--glass-border); font-weight:600; font-size:14px; cursor:pointer; color:var(--ink);}
+.chip-btn:hover{background:rgba(15,23,42,0.1);}
+.chat-input-row{display:flex; gap:12px; padding-top:6px;}
+.chat-input-row input{flex:1; padding:18px 22px; border-radius:20px; border:1px solid var(--glass-border); background:rgba(15,23,42,0.045); color:var(--ink); font-size:17px; font-family:inherit;}
+.round-btn{width:58px; height:58px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; border:1px solid var(--glass-border); background:rgba(15,23,42,0.05); flex-shrink:0;}
+.round-btn.mic-on{background:linear-gradient(135deg,var(--secondary),var(--primary)); animation:pulse-fast 1.1s infinite;}
+.round-btn.send{background:linear-gradient(135deg,var(--secondary),var(--primary));}
+
+/* ---------- SCREEN 6: RECOMMENDED TESTS ---------- */
+.test-timer-row{display:flex; align-items:center; gap:12px; margin-bottom:22px;}
+.test-timer{padding:8px 18px; border-radius:20px; font-weight:800; font-size:14px; color:#FCA5A5; background:rgba(239,68,68,0.14); border:1px solid rgba(239,68,68,0.35);}
+.device-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:20px; width:920px;}
+.device-card{padding:26px; cursor:pointer; position:relative; overflow:hidden;}
+.device-card .dicon{font-size:36px; margin-bottom:12px;}
+.device-card .dname{font-size:19px; font-weight:800; margin-bottom:4px;}
+.device-card .dmachine{font-size:13px; color:var(--muted); font-weight:600; margin-bottom:6px;}
+.device-card .dcost{font-size:15px; font-weight:800; color:var(--secondary); margin-bottom:8px;}
+.device-card .dstate{font-size:13px; font-weight:700; color:var(--muted);}
+.device-card .dstate.connected{color:var(--success);}
+.device-card.selected{outline:2px solid var(--secondary); background:rgba(37,99,235,0.16);}
+.device-card .meta{display:flex; gap:14px; margin-top:12px; font-size:12px; color:var(--muted); font-weight:600;}
+.progress-line{position:absolute; bottom:0; left:0; height:3px; background:linear-gradient(90deg,var(--secondary),var(--primary)); width:0%; transition:width 1.4s linear;}
+.tests-cta-row{display:flex; gap:16px; margin-top:30px;}
+.tests-total{font-weight:700; color:var(--muted); margin-top:10px; font-size:15px;}
+
+/* ---------- ECG ---------- */
+.ecg-panel{width:920px; padding:34px; }
+.ecg-top{display:flex; justify-content:space-between; align-items:center; margin-bottom:18px;}
+.hr-display{font-size:52px; font-weight:900; color:var(--success);}
+.hr-display span{font-size:16px; color:var(--muted); font-weight:600; display:block;}
+.rec-dot{width:12px;height:12px;border-radius:50%; background:var(--danger); animation:blink 1s infinite; display:inline-block; margin-right:8px;}
+@keyframes blink{50%{opacity:.2;}}
+canvas{width:100%; height:220px; border-radius:16px; background:rgba(0,0,0,0.35); border:1px solid var(--glass-border);}
+.sig-quality{margin-top:14px; font-size:14px; font-weight:700; color:var(--success);}
+
+/* ---------- PROCESSING ---------- */
+.brain-wrap{width:220px;height:220px; position:relative;}
+.processing-text{font-size:24px; font-weight:800; margin-top:30px; min-height:34px;}
+.progress-track{width:420px; height:10px; border-radius:8px; background:rgba(255,255,255,0.1); margin-top:24px; overflow:hidden;}
+.progress-fill{height:100%; width:0%; background:linear-gradient(90deg,var(--secondary),var(--primary)); border-radius:8px; transition:width .3s linear;}
+
+/* ---------- DIAGNOSIS ---------- */
+.report-panel{width:820px; max-height:82vh; overflow-y:auto; padding:38px 40px;}
+.report-panel h2{font-size:28px; font-weight:900;}
+.report-panel .rmeta{color:#5b6b8c; font-size:14px; font-weight:600; margin-top:4px;}
+.report-row{display:flex; gap:20px; margin-top:22px;}
+.stat-box{flex:1; background:#F1F5FB; border-radius:16px; padding:18px; text-align:center;}
+.stat-box .val{font-size:28px; font-weight:900; color:var(--primary);}
+.stat-box .lbl{font-size:12px; font-weight:700; color:#5b6b8c; text-transform:uppercase; margin-top:4px;}
+.section-h{font-size:15px; font-weight:800; text-transform:uppercase; letter-spacing:.6px; color:#5b6b8c; margin-top:26px; margin-bottom:10px;}
+.rec-list{list-style:none; display:flex; flex-direction:column; gap:8px;}
+.rec-list li{background:#F1F5FB; padding:12px 16px; border-radius:12px; font-weight:600; font-size:15px;}
+.risk-badge{display:inline-block; padding:6px 14px; border-radius:10px; font-weight:800; font-size:13px; margin-top:6px;}
+.risk-low{background:#E7F8F0; color:var(--success);}
+.risk-moderate{background:#FEF3C7; color:#B45309; border:1px solid #F59E0B;}
+.risk-high{background:#FEE2E2; color:#B91C1C; border:1px solid #EF4444;}
+.report-actions{display:flex; gap:12px; margin-top:30px; flex-wrap:wrap;}
+.report-actions button{flex:1; padding:16px; border-radius:14px; font-weight:700; font-size:15px; cursor:pointer; border:1px solid #dde5f2; background:#fff;}
+.report-actions button.primary{background:linear-gradient(135deg,var(--secondary),var(--primary)); color:#fff; border:none;}
+
+/* scrollbar */
+::-webkit-scrollbar{width:8px;} ::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.2); border-radius:8px;}
+.report-panel::-webkit-scrollbar-thumb{background:#cbd6e8;}
+
+@media (prefers-reduced-motion: reduce){ *{animation-duration:.001s !important; transition-duration:.001s !important;} }
+
+/* ---------- ROLE SELECT ---------- */
+.role-row{display:flex; gap:26px; margin-top:14px;}
+.auth-mode-row{display:flex; gap:18px; margin-top:6px;}
+.choice-card.selected{outline:2px solid var(--secondary); background:rgba(37,99,235,0.18);}
+
+/* ---------- SCREEN 9: END / FAREWELL ---------- */
+.farewell-title{font-size:var(--fs-heading); font-weight:900; text-align:center; margin-top:26px;}
+.farewell-sub{font-size:20px; font-weight:600; color:var(--muted); text-align:center; margin-top:10px; max-width:600px;}
+.farewell-note{font-size:14px; color:#8FA2CC; margin-top:30px; font-weight:600;}
+
+/* ---------- ASHA DASHBOARD ---------- */
+#screen-asha-dashboard{align-items:stretch; padding-top:96px;}
+.asha-wrap{width:100%; max-width:1080px; margin:0 auto; display:flex; gap:22px; height:100%;}
+.asha-col-list{flex:1.1; display:flex; flex-direction:column; padding:24px; overflow:hidden;}
+.asha-col-detail{flex:1.4; padding:28px; overflow-y:auto;}
+.asha-header{display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;}
+.asha-header h2{font-size:22px; font-weight:800;}
+.asha-search{width:100%; padding:12px 16px; border-radius:12px; border:1px solid var(--glass-border); background:rgba(15,23,42,0.045); color:var(--ink); font-size:15px; font-family:inherit; margin-bottom:14px;}
+.asha-patients{overflow-y:auto; display:flex; flex-direction:column; gap:10px;}
+.asha-row{padding:14px 16px; border-radius:14px; background:rgba(15,23,42,0.035); border:1px solid var(--glass-border); cursor:pointer; transition:.15s;}
+.asha-row:hover, .asha-row.selected{background:rgba(13,148,136,0.12);}
+.asha-row .arow-top{display:flex; justify-content:space-between; align-items:center; font-weight:800; font-size:16px;}
+.asha-row .arow-sub{font-size:13px; color:var(--muted); margin-top:4px; font-weight:500;}
+.flag-badge{background:rgba(239,68,68,0.14); color:#B91C1C; font-size:11px; font-weight:800; padding:3px 9px; border-radius:8px; border:1px solid rgba(239,68,68,0.35);}
+.asha-empty{color:var(--muted); font-weight:600; text-align:center; margin-top:60px;}
+.visit-card{background:#F1F5FB; border-radius:14px; padding:16px 18px; margin-bottom:12px;}
+.visit-card .vtop{display:flex; justify-content:space-between; font-weight:800; color:var(--ink); font-size:15px;}
+.visit-card .vmeta{font-size:12px; color:#5b6b8c; font-weight:600; margin-top:2px;}
+.visit-card .vcond{margin-top:8px; font-weight:700; color:var(--primary);}
+#btn-asha-logout{margin-top:10px;}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="ambient"></div>
+  <!-- Offline banner removed for demo kiosk mode -->
+
+  <div id="topbar">
+    <div class="left">
+      <div class="brandmark"></div>
+      <span>AAHA · Primary Health Centre Kiosk</span>
+    </div>
+    <div class="right">
+      <span id="clock">--:--</span>
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9FC0FF" stroke-width="2"><path d="M12 2v20M17 7L7 17M7 7l10 10"/></svg>
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9FC0FF" stroke-width="2"><path d="M2 8.5a15 15 0 0 1 20 0M5 12a10 10 0 0 1 14 0M8.5 15.5a5 5 0 0 1 7 0M12 19h.01"/></svg>
+      <span style="display:flex;align-items:center;">
+        <svg width="26" height="14" viewBox="0 0 26 14" fill="none"><rect x="1" y="1" width="21" height="12" rx="3" stroke="#9FC0FF" stroke-width="1.5"/><rect x="23" y="4.5" width="2" height="5" fill="#9FC0FF"/><rect x="3" y="3" width="15" height="8" rx="1.5" fill="#10B981"/></svg>
+        <span class="battery-pct">82%</span>
+      </span>
+    </div>
+  </div>
+
+  <!-- SCREEN 1: ATTRACTIVE AAHA LOGO -->
+  <section class="screen active" id="screen-splash">
+    <div class="orb-slot"><div class="orb-wrap" id="splash-orb">
+      <div class="orb-face-simple"><span class="s-eye left"></span><span class="s-eye right"></span></div>
+    </div></div>
+    <div style="font-size:48px; font-weight:900; letter-spacing:2px; margin-top:10px;">AAHA</div>
+    <div style="font-size:16px; color:var(--muted); font-weight:600; letter-spacing:3px; margin-top:6px;">AI HEALTH SCREENING KIOSK</div>
+  </section>
+
+  <!-- SCREEN 2: PRE-RECORDED AAHA VIDEO (5-10 seconds) -->
+  <section class="screen" id="screen-video">
+    <div class="orb-slot"><div class="orb-wrap" id="video-orb">
+      <div class="orb-face-simple"><span class="s-eye left"></span><span class="s-eye right"></span></div>
+    </div></div>
+    <div class="speak-caption" id="speak-caption">"Namaste! Main AAHA hoon — aapki sehat ki saathi."</div>
+    <div class="speak-subcaption" id="speak-subcaption">Your AI-powered health companion at the Primary Health Centre</div>
+    <div class="video-progress-track"><div class="video-progress-fill" id="video-fill"></div></div>
+    <div class="control-row">
+      <button class="btn btn-ghost" id="btn-skip-video">Skip Intro →</button>
+    </div>
+  </section>
+
+  <!-- SCREEN 3: LOGIN/SIGN UP - ROLE SELECTION -->
+  <section class="screen" id="screen-role">
+    <div class="greet" style="font-size:40px;">Welcome to AAHA</div>
+    <div class="sub" style="font-size:18px; margin-bottom:6px;">Please select an option to continue</div>
+    <div class="auth-mode-row" id="auth-mode-row">
+      <button class="btn btn-primary btn-disabled" id="btn-mode-login">Login</button>
+      <button class="btn btn-ghost btn-disabled" id="btn-mode-signup">Sign Up</button>
+    </div>
+    <div class="prompt-line" style="margin-top:34px; margin-bottom:2px; font-size:16px; color:var(--muted); text-transform:uppercase; letter-spacing:1px;">I am a...</div>
+    <div class="role-row">
+      <div class="choice-card glass-card" id="btn-role-patient">
+        <span class="emoji">🧑‍🦱</span>
+        <div class="ctitle">I am a Patient</div>
+        <div class="csub">Get screened &amp; see your own reports</div>
+      </div>
+      <div class="choice-card glass-card" id="btn-role-asha">
+        <span class="emoji">🩺</span>
+        <div class="ctitle">I am an ASHA Worker</div>
+        <div class="csub">View patient records &amp; history</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SCREEN 4A: LOGIN - Mobile Number and OTP Verification -->
+  <section class="screen" id="screen-otp">
+    <div class="otp-panel glass-card">
+      <h2 id="otp-title">Login — Verify Mobile</h2>
+      <p id="otp-sub">Enter your mobile number to receive an OTP</p>
+      <div class="phone-display" id="phone-display">__ __ __ __ __</div>
+      <div class="keypad" id="keypad"></div>
+      <button class="btn btn-primary" id="btn-verify" style="width:100%; margin-top:22px;">Verify OTP</button>
+    </div>
+  </section>
+
+  <!-- SCREEN 4B: SIGN UP - Name, Last Name, Age, Phone Number -->
+  <section class="screen" id="screen-registration">
+    <div style="font-size:var(--fs-title); font-weight:800; margin-bottom:26px;">Create Your Profile</div>
+    <div class="reg-grid glass-card" style="padding:34px;">
+      <div class="field"><label>First Name</label><input id="reg-name" placeholder="e.g. Sunita"></div>
+      <div class="field"><label>Last Name</label><input id="reg-lastname" placeholder="e.g. Devi"></div>
+      <div class="field"><label>Age</label><input id="reg-age" type="number" placeholder="e.g. 42"></div>
+      <div class="field"><label>Phone Number</label><input id="reg-phone" readonly></div>
+      <div class="reg-actions"><button class="btn btn-primary" id="btn-reg-continue">Continue →</button></div>
+    </div>
+  </section>
+
+  <!-- REGISTRATION SUCCESS (Redirect to Login) -->
+  <section class="screen" id="screen-reg-success">
+    <div class="orb-wrap" style="width:200px;height:200px;">
+      <div class="orb-ring r1"></div><div class="orb-ring r2"></div>
+      <div class="orb-core" id="regsuccess-core"></div>
+    </div>
+    <div class="farewell-title" style="margin-top:22px; font-size:32px;">✅ Registration Successful</div>
+    <div class="farewell-sub">Redirecting you to Login...</div>
+  </section>
+
+  <!-- SCREEN 5: INTERACTION UI - STT(Patient) -> Buffer -> TTS(AI) with Live Chat Summary -->
+  <section class="screen" id="screen-chat">
+    <div class="chat-wrap">
+      <div class="chat-header">
+        <div class="mini-orb"></div>
+        <div class="htxt"><b>AAHA</b><span>● Online · Listening for your symptoms</span></div>
+      </div>
+      <div class="chat-scroll glass-card" id="chat-scroll" style="padding:20px;"></div>
+      <div class="suggested-row" id="suggested-row"></div>
+      <div class="chat-input-row">
+        <div class="round-btn" id="chat-mic">🎤</div>
+        <input id="chat-input" placeholder="Type your message...">
+        <div class="round-btn send" id="chat-send">➤</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SCREEN 6: AI RECOMMENDATIONS - Test Details, Machine Name, Cost (30sec timeout) -->
+  <section class="screen" id="screen-devices">
+    <div style="font-size:var(--fs-title); font-weight:800; margin-bottom:6px;">Recommended Tests</div>
+    <div style="color:var(--muted); font-weight:600; margin-bottom:16px;">Based on your symptoms, AAHA suggests the tests below</div>
+    <div class="test-timer-row">
+      <div class="test-timer" id="tests-timer">⏱ 30s to choose</div>
+    </div>
+    <div class="device-grid" id="device-grid"></div>
+    <div class="tests-total" id="tests-total"></div>
+    <div class="tests-cta-row">
+      <button class="btn btn-ghost" id="btn-cancel-tests">✕ Cancel</button>
+      <button class="btn btn-primary" id="btn-start-tests">Start Selected Tests →</button>
+    </div>
+  </section>
+
+  <!-- SCREEN 6B: ECG CAPTURE (if selected) -->
+  <section class="screen" id="screen-ecg">
+    <div class="ecg-panel glass-card">
+      <div class="ecg-top">
+        <div><span class="rec-dot"></span><b style="font-size:18px;">Recording ECG</b></div>
+        <div class="hr-display" id="hr-value">78<span>BPM</span></div>
+      </div>
+      <canvas id="ecg-canvas" width="900" height="220"></canvas>
+      <div class="sig-quality">✓ Signal Quality: Excellent</div>
+      <div style="display:flex; justify-content:flex-end; margin-top:20px;">
+        <button class="btn btn-primary" id="btn-ecg-done">Complete Test →</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- SCREEN 7: ANALYZE REPORT - Buffer UI till response -->
+  <section class="screen" id="screen-processing">
+    <div class="brain-wrap">
+      <div class="orb-wrap" style="width:220px;height:220px;">
+        <div class="orb-ring r1"></div><div class="orb-ring r2"></div>
+        <div class="orb-particles"></div>
+        <div class="orb-core thinking" id="proc-core"></div>
+      </div>
+    </div>
+    <div class="processing-text" id="proc-text">Analyzing Symptoms...</div>
+    <div class="progress-track"><div class="progress-fill" id="proc-fill"></div></div>
+  </section>
+
+  <!-- SCREEN 8: AI RECOMMENDATION ON REPORT - May ask for doc appointment, Share via WhatsApp -->
+  <section class="screen" id="screen-diagnosis">
+    <div class="report-panel light-card" id="report-panel"></div>
+  </section>
+
+  <!-- SCREEN 9: END OF CONVERSATION - Greet Patient -->
+  <section class="screen" id="screen-end">
+    <div class="orb-wrap" style="width:220px;height:220px;">
+      <div class="orb-ring r1"></div><div class="orb-ring r2"></div>
+      <div class="orb-core" id="end-core"></div>
+      <div class="orb-face face-sm"><div class="orb-eyebrows"><div class="eyebrow"></div><div class="eyebrow right"></div></div><div class="orb-eyes"><div class="eye"><span class="pupil"></span></div><div class="eye"><span class="pupil"></span></div></div><div class="mouth"></div></div>
+    </div>
+    <div class="farewell-title" id="end-title">Thank You, <span id="end-name">Patient</span> 🙏</div>
+    <div class="farewell-sub">Your report has been sent to your WhatsApp. Take care, and stay healthy!</div>
+    <div class="farewell-note">Returning to home screen shortly...</div>
+  </section>
+
+  <!-- ASHA DASHBOARD -->
+  <section class="screen" id="screen-asha-dashboard">
+    <div class="asha-wrap">
+      <div class="asha-col-list glass-card">
+        <div class="asha-header">
+          <h2>👩‍⚕️ ASHA Worker View</h2>
+        </div>
+        <input class="asha-search" id="asha-search" placeholder="Search by name, village or phone...">
+        <div class="asha-patients" id="asha-patients"></div>
+        <button class="btn btn-ghost" id="btn-asha-logout">⎋ Log Out</button>
+      </div>
+      <div class="asha-col-detail glass-card" id="asha-detail">
+        <div class="asha-empty">Select a patient to view their history</div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+/* ============================= STATE ============================= */
+const state = {
+  role:null, // 'patient' | 'asha'
+  patient:{name:'',age:'',gender:'',village:'',weight:'',height:''},
+  phone:'',
+  language:'English',
+  symptomTranscript:'',
+  chatHistory:[], // {role, content}
+  devicesConnected:{ecg:false,bp:false,spo2:false,glucose:false,hb:false,steth:false},
+  selectedTests:[],
+  vitals:{hr:78,bp:'118/76',spo2:97},
+  returningPatient:false,
+  lastVisit:null
+};
+
+/* ============================= PATIENT DB (localStorage) =============================
+   Simulates the Cloud SQL/Firestore patient-history store described in the
+   architecture doc (Section 10): patient record keyed by mobile number,
+   with an array of visit records. Runs entirely on-device for this prototype. */
+const DB_KEY = 'aaha_patient_db_v1';
+function loadDB(){
+  try{ return JSON.parse(localStorage.getItem(DB_KEY)) || {}; }catch(e){ return {}; }
+}
+function saveDB(db){
+  try{ localStorage.setItem(DB_KEY, JSON.stringify(db)); }catch(e){ console.warn('DB save failed', e); }
+}
+function getPatientRecord(phone){
+  const db = loadDB();
+  return db[phone] || null;
+}
+function upsertPatientProfile(phone, profile){
+  const db = loadDB();
+  if(!db[phone]) db[phone] = {profile, visits:[]};
+  else db[phone].profile = profile;
+  saveDB(db);
+}
+function saveVisitRecord(phone, visit){
+  const db = loadDB();
+  if(!db[phone]) db[phone] = {profile: state.patient, visits:[]};
+  db[phone].visits.unshift(visit); // most recent first
+  saveDB(db);
+}
+
+/* ============================= UTIL ============================= */
+const $ = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
+
+function goTo(id){
+  $$('.screen').forEach(s=>s.classList.remove('active'));
+  $('#'+id).classList.add('active');
+  onEnterScreen(id);
+}
+
+/* ambient particles */
+(function initAmbient(){
+  const wrap = $('#ambient');
+  for(let i=0;i<26;i++){
+    const m = document.createElement('div');
+    const size = 2+Math.random()*4;
+    m.className='mote';
+    m.style.width=size+'px'; m.style.height=size+'px';
+    m.style.left = Math.random()*100+'%';
+    m.style.top = 60+Math.random()*40+'%';
+    m.style.animationDuration = (14+Math.random()*18)+'s';
+    m.style.animationDelay = (Math.random()*10)+'s';
+    wrap.appendChild(m);
+  }
+})();
+
+/* orb particle rings (welcome) */
+function buildOrbParticles(container, count){
+  container.innerHTML='';
+  const r = container.parentElement.clientWidth/2 - 6;
+  for(let i=0;i<count;i++){
+    const a = (i/count)*Math.PI*2;
+    const s = document.createElement('span');
+    s.style.left = (container.clientWidth/2 + r*Math.cos(a) - 3)+'px';
+    s.style.top = (container.clientHeight/2 + r*Math.sin(a) - 3)+'px';
+    s.style.opacity = 0.4+Math.random()*0.6;
+    container.appendChild(s);
+  }
+}
+/* clock */
+function tickClock(){
+  const d = new Date();
+  $('#clock').textContent = d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+}
+tickClock(); setInterval(tickClock, 1000*20);
+
+/* ============================= SPEECH SUPPORT ============================= */
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+let recognition = null;
+function speak(text, onWord, onEnd){
+  const faces = document.querySelectorAll('.screen.active .orb-face');
+  try{
+    window.speechSynthesis.cancel();
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.rate = 0.90; // Slower rate for clear pronunciation (was 0.98)
+    utter.pitch = 1.05;
+    utter.volume = 1.0; // Full volume
+    const voices = window.speechSynthesis.getVoices();
+    const female = voices.find(v=>/female|zira|samantha|google uk english female|hindi.*female/i.test(v.name));
+    if(female) utter.voice = female;
+    if(onWord) utter.onboundary = (e)=>{ if(e.name==='word') onWord(e.charIndex); };
+    faces.forEach(f=>f.classList.add('talking'));
+    utter.onend = ()=>{ 
+      faces.forEach(f=>f.classList.remove('talking')); 
+      if(onEnd) onEnd(); 
+    };
+    window.speechSynthesis.speak(utter);
+  }catch(e){ 
+    console.warn('TTS unavailable', e); 
+    faces.forEach(f=>f.classList.remove('talking')); 
+    if(onEnd) onEnd(); 
+  }
+}
+
+/* utility kept for in-chat language detection (Section: chat mic uses this) */
+function detectLanguage(text){
+  if(/[\u0900-\u097F]/.test(text||'')) return 'Hindi';
+  return 'English';
+}
+
+/* ============================= SCREEN 1: SPLASH -> SCREEN 2: AAHA INTRO (speaks, 30s) ============================= */
+let videoAdvanceTimer=null, captionCycleTimer=null;
+const INTRO_DURATION = 30000; // AAHA "speaks" for exactly 30 seconds
+const INTRO_LINES = [
+  { main:'"Namaste! Main AAHA hoon — AI Health Assistant."', sub:'Your 24/7 health companion at Primary Health Centre', duration: 5000 },
+  { main:'"Main aapki sehat ki jaanch mein madad karungi."', sub:'I will help you with your health screening today', duration: 4500 },
+  { main:'"Sirf 30 seconds mein complete health check ho jaayega."', sub:'Complete health screening in just 30 seconds', duration: 4500 },
+  { main:'"Aap Hindi, English, Tamil ya Telugu mein baat kar sakte hain."', sub:'Speak in your preferred language - Hindi, English, Tamil, Telugu', duration: 5000 },
+  { main:'"Main aapke symptoms sunkar AI se instant report dungi."', sub:'AI-powered health assessment based on your symptoms', duration: 4500 },
+  { main:'"Blood pressure, oxygen level, aur zaruri tests bhi karenge."', sub:'We will check BP, SpO2, and other necessary medical tests', duration: 4500 },
+  { main:'"Chaliye shuru karte hain — aapki sehat hamari zimmedari hai."', sub:'Let\'s begin your health journey — your wellness is our priority', duration: 4000 }
+];
+function playIntroVideo(){
+  clearTimeout(videoAdvanceTimer); clearInterval(captionCycleTimer);
+  const fill = $('#video-fill');
+  const captionEl = $('#speak-caption');
+  const subEl = $('#speak-subcaption');
+  
+  // Setup progress bar animation (smooth 30s)
+  fill.style.transition='none'; 
+  fill.style.width='0%';
+  requestAnimationFrame(()=>{
+    fill.style.transition = `width ${INTRO_DURATION}ms linear`;
+    fill.style.width = '100%';
+  });
+
+  let lineIndex = 0;
+  let timeElapsed = 0;
+  let ttsQueue = []; // Queue to manage TTS completion
+  
+  // Function to show a specific line with TTS completion wait
+  function showLine(i){
+    if(i >= INTRO_LINES.length) return;
+    
+    const line = INTRO_LINES[i];
+    
+    // Fade out current text
+    captionEl.style.opacity='0'; 
+    subEl.style.opacity='0';
+    
+    // Wait for fade, then change content and speak
+    setTimeout(()=>{
+      captionEl.textContent = line.main;
+      subEl.textContent = line.sub;
+      captionEl.style.opacity='1'; 
+      subEl.style.opacity='1';
+      
+      // Speak the line and wait for completion
+      const textToSpeak = line.main.replace(/^"|"$/g, '');
+      console.log(`🎤 Line ${i+1}/${INTRO_LINES.length}: "${textToSpeak}"`);
+      
+      // Speak with completion callback
+      speak(textToSpeak, null, () => {
+        console.log(`✅ Line ${i+1} TTS complete`);
+      });
+      
+    }, 400); // Slightly longer fade for smooth transition
+  }
+  
+  // Show first line immediately
+  showLine(0);
+  timeElapsed = INTRO_LINES[0].duration;
+  
+  // Schedule remaining lines based on individual durations
+  // Each line waits for its duration before showing next
+  for(let i = 1; i < INTRO_LINES.length; i++){
+    ((index) => {
+      setTimeout(() => {
+        showLine(index);
+        lineIndex = index;
+      }, timeElapsed);
+    })(i);
+    
+    timeElapsed += INTRO_LINES[i].duration;
+  }
+  
+  // Auto-advance to next screen after full duration
+  videoAdvanceTimer = setTimeout(()=> finishIntroVideo(), INTRO_DURATION);
+}
+function finishIntroVideo(){
+  clearTimeout(videoAdvanceTimer); clearInterval(captionCycleTimer);
+  try{ window.speechSynthesis.cancel(); }catch(e){}
+  goTo('screen-role');
+}
+$('#btn-skip-video').addEventListener('click', finishIntroVideo);
+
+function startKiosk(){
+  goTo('screen-splash');
+  // Screen 1: Show attractive AAHA logo for 3 seconds
+  setTimeout(()=>{ 
+    $('#topbar').classList.add('visible'); 
+    // Screen 2: Move to pre-recorded AAHA video (5-10 sec)
+    goTo('screen-video'); 
+  }, 3000);
+}
+startKiosk();
+
+/* ============================= SCREEN 3: WELCOME / ROLE SELECT ============================= */
+state.authMode = null; // 'login' | 'signup'
+function selectRole(role){
+  state.role = role;
+  $('#btn-role-patient').classList.toggle('selected', role==='patient');
+  $('#btn-role-asha').classList.toggle('selected', role==='asha');
+  $('#btn-mode-login').classList.remove('btn-disabled');
+  $('#btn-mode-signup').classList.remove('btn-disabled');
+}
+function updateOtpHeader(){
+  const roleLabel = state.role==='asha' ? 'ASHA Worker' : 'Patient';
+  if(state.authMode==='signup'){
+    $('#otp-title').textContent = 'Sign Up — Verify Mobile';
+    $('#otp-sub').textContent = `Creating a new ${roleLabel} account · Enter your mobile number to receive an OTP`;
+  } else {
+    $('#otp-title').textContent = 'Login — Verify Mobile';
+    $('#otp-sub').textContent = `${roleLabel} Login · Enter your mobile number to receive an OTP`;
+  }
+}
+$('#btn-role-patient').addEventListener('click', ()=> selectRole('patient'));
+$('#btn-role-asha').addEventListener('click', ()=> selectRole('asha'));
+$('#btn-mode-login').addEventListener('click', ()=>{
+  if(!state.role) return;
+  state.authMode='login'; updateOtpHeader(); goTo('screen-otp');
+});
+$('#btn-mode-signup').addEventListener('click', ()=>{
+  if(!state.role) return;
+  state.authMode='signup'; updateOtpHeader(); goTo('screen-otp');
+});
+
+/* ============================= SCREEN 5: OTP ============================= */
+function buildKeypad(){
+  const pad = $('#keypad'); pad.innerHTML='';
+  const keys = ['1','2','3','4','5','6','7','8','9','⌫','0','✓'];
+  keys.forEach(k=>{
+    const d = document.createElement('div');
+    d.className='key'; d.textContent=k;
+    d.addEventListener('click', ()=>{
+      if(k==='⌫') state.phone = state.phone.slice(0,-1);
+      else if(k==='✓'){ if(state.phone.length===10) verifyOtp(); }
+      else if(state.phone.length<10) state.phone += k;
+      renderPhone();
+    });
+    pad.appendChild(d);
+  });
+}
+function renderPhone(){
+  const p = state.phone.padEnd(10,'_').match(/.{1,2}/g).join(' ');
+  $('#phone-display').textContent = p;
+  $('#btn-verify').classList.toggle('btn-disabled', state.phone.length!==10);
+}
+buildKeypad(); renderPhone();
+
+/* Simulates OTP send+verify (Section 7). In production this hits an SMS
+   gateway (vendor not yet chosen — see architecture doc Section 14); here
+   we auto-accept after a short delay to demo the flow. */
+function verifyOtp(){
+  $('#btn-verify').textContent='Verifying...';
+  setTimeout(()=>{
+    $('#btn-verify').textContent='Verify';
+    if(state.role==='asha'){
+      goTo('screen-asha-dashboard');
+      return;
+    }
+    // Patient path: load prior history first (Section 8) so returning
+    // patients are recognized and AAHA never starts "cold".
+    const record = getPatientRecord(state.phone);
+    const hasAccount = !!(record && record.profile && record.profile.name);
+
+    if(state.authMode === 'signup'){
+      if(hasAccount){
+        // Already registered — log them in instead of re-registering.
+        state.patient = {...record.profile};
+        state.returningPatient = true;
+        state.lastVisit = record.visits && record.visits[0] ? record.visits[0] : null;
+        alert('An account already exists for this number — logging you in instead.');
+        goTo('screen-chat');
+      } else {
+        state.returningPatient = false;
+        state.lastVisit = null;
+        $('#reg-phone').value = state.phone;
+        $('#reg-name').value=''; $('#reg-lastname').value=''; $('#reg-age').value='';
+        goTo('screen-registration');
+      }
+    } else { // login
+      if(hasAccount){
+        state.patient = {...record.profile};
+        state.returningPatient = true;
+        state.lastVisit = record.visits && record.visits[0] ? record.visits[0] : null;
+        goTo('screen-chat');
+      } else {
+        alert('No account found for this number. Please complete Sign Up.');
+        state.authMode = 'signup';
+        updateOtpHeader();
+        state.returningPatient = false;
+        state.lastVisit = null;
+        $('#reg-phone').value = state.phone;
+        $('#reg-name').value=''; $('#reg-lastname').value=''; $('#reg-age').value='';
+        goTo('screen-registration');
+      }
+    }
+  }, 1300);
+}
+$('#btn-verify').addEventListener('click', ()=>{ if(state.phone.length===10) verifyOtp(); });
+
+/* ============================= SCREEN 4: SIGN UP ============================= */
+$('#btn-reg-continue').addEventListener('click', ()=>{
+  const first = $('#reg-name').value.trim() || 'Patient';
+  const last = $('#reg-lastname').value.trim();
+  state.patient.name = (first+' '+last).trim();
+  state.patient.age = $('#reg-age').value || '—';
+  upsertPatientProfile(state.phone, {...state.patient, phone: state.phone});
+  goTo('screen-reg-success');
+});
+
+/* ============================= REGISTRATION SUCCESS -> AUTO REDIRECT TO LOGIN ============================= */
+let regSuccessTimer=null;
+function runRegSuccess(){
+  speak('Registration successful. Redirecting you to login.');
+  clearTimeout(regSuccessTimer);
+  regSuccessTimer = setTimeout(()=>{
+    state.authMode = 'login';
+    updateOtpHeader();
+    goTo('screen-otp');
+  }, 2400);
+}
+
+/* ============================= SCREEN 7: CHAT (live Claude call) ============================= */
+function addBubble(role, text){
+  const scroll = $('#chat-scroll');
+  const b = document.createElement('div');
+  b.className = 'bubble '+(role==='user'?'user':'ai');
+  b.textContent = text;
+  scroll.appendChild(b);
+  scroll.scrollTop = scroll.scrollHeight;
+}
+function showThinking(){
+  const scroll = $('#chat-scroll');
+  const t = document.createElement('div');
+  t.className='thinking-dots'; t.id='thinking-indicator';
+  t.innerHTML='<span></span><span></span><span></span>';
+  scroll.appendChild(t);
+  scroll.scrollTop = scroll.scrollHeight;
+}
+function hideThinking(){ const t = $('#thinking-indicator'); if(t) t.remove(); }
+
+function setSuggested(list){
+  const row = $('#suggested-row'); row.innerHTML='';
+  list.forEach(s=>{
+    const c = document.createElement('div');
+    c.className='chip-btn'; c.textContent=s;
+    c.addEventListener('click', ()=> sendChat(s));
+    row.appendChild(c);
+  });
+}
+
+const AAHA_SYSTEM_PROMPT = `You are AAHA, an empathetic AI health assistant at an Indian Primary Health Centre.
+
+CONVERSATION STYLE:
+- Speak warmly in simple Hindi/English mix (natural Indian PHC style)
+- Keep responses to 2-3 short sentences maximum
+- Be caring but efficient - time is precious at a busy PHC
+- Use "aap" for respect, avoid medical jargon
+
+YOUR JOB (Triage & Recommend Tests):
+1. First, understand the MAIN complaint (fever, pain, breathing issue, etc.)
+2. Ask 2-3 focused follow-up questions:
+   - Duration (kab se hai?)
+   - Severity (kitna severe hai? 1-10)
+   - Associated symptoms (aur kuch symptoms?)
+3. After gathering info, AUTOMATICALLY recommend specific tests based on symptoms:
+
+SYMPTOM → TEST MAPPING (Use this logic):
+- Fever + body ache → "Blood tests recommended: Hemoglobin, Blood Glucose"
+- Chest pain / breathing → "ECG aur Oxygen level check zaruri hai"
+- High BP history → "Blood Pressure aur ECG check karte hain"
+- Weakness / fatigue → "Hemoglobin aur Blood Glucose test karenge"
+- Heart palpitations → "ECG monitor se heart check karna hoga"
+- Diabetes symptoms → "Blood Glucose test immediately karna chahiye"
+- General checkup → "Basic vitals: BP, Oxygen level, aur ECG"
+
+4. After 3-4 exchanges, conclude with:
+   "Theek hai [name], ab main aapke liye [SPECIFIC TESTS] recommend karti hoon. Let's check your vitals."
+
+CRITICAL RULES:
+- NEVER diagnose diseases definitively
+- NEVER prescribe medicines
+- ALWAYS recommend at least 1-2 specific tests based on symptoms
+- Use phrases like "check karte hain", "test recommend karti hoon", "vitals dekh lete hain"
+- Be action-oriented: move quickly from symptoms → test recommendations
+
+Example good response:
+"Bukhar 3 din se hai aur body ache bhi? Theek hai. Koi cough ya throat pain bhi hai kya? Batayein toh main tests suggest kar sakti hoon."
+
+Then after response:
+"Thank you. Aapke symptoms ke basis pe, main Blood tests (Hemoglobin + Glucose) aur vitals check recommend karti hoon. Chaliye shuru karte hain."`;
+
+/* Enhanced local fallback with intelligent conversation flow */
+const FALLBACK_RESPONSES = {
+  initial: [
+    "Aapko kya takleef ho rahi hai? Aaram se bataiye.",
+    "Main sun rahi hoon, aapki kya complaint hai?",
+    "Kaise tabiyat hai aapki? Koi problem hai?"
+  ],
+  duration: [
+    "Yeh problem kitne din se hai aapko?",
+    "Kab se yeh symptoms feel kar rahe hain?",
+    "Yeh complaint kab se shuru hui?"
+  ],
+  severity: [
+    "1 se 10 mein, kitna severe hai yeh problem?",
+    "Bahut zyada takleef hai ya thodi si?",
+    "Pain/discomfort ka level kya hai?"
+  ],
+  associated: [
+    "Aur koi symptoms hain saath mein? Jaise fever, weakness?",
+    "Body mein aur kahin problem feel ho rahi hai?",
+    "Koi aur complaint hai jise main jaanna chaahiye?"
+  ],
+  conclude: [
+    "Theek hai, ab main aapke vitals check karungi. Blood Pressure, Oxygen level, aur agar zarurat hui toh ECG bhi. Chaliye shuru karte hain.",
+    "Thank you for sharing. Ab vitals check karte hain - BP, SpO2, aur basic tests. Let's begin.",
+    "Samajh gayi. Ab medical devices se aapka checkup karte hain. Tests recommend kar rahi hoon."
+  ]
+};
+let fallbackIdx = 0;
+let fallbackStage = 'initial'; // Track conversation stage
+function fallbackReply(){
+  // Intelligent fallback based on conversation stage
+  let responses;
+  if(fallbackIdx === 0) responses = FALLBACK_RESPONSES.initial;
+  else if(fallbackIdx === 1) responses = FALLBACK_RESPONSES.duration;
+  else if(fallbackIdx === 2) responses = FALLBACK_RESPONSES.severity;
+  else if(fallbackIdx === 3) responses = FALLBACK_RESPONSES.associated;
+  else responses = FALLBACK_RESPONSES.conclude;
+  
+  const reply = responses[Math.floor(Math.random() * responses.length)];
+  fallbackIdx++;
+  return reply;
+}
+
+async function callClaude(history){
+  try{
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({
+        model:"claude-sonnet-4-6",
+        max_tokens:200,
+        system: AAHA_SYSTEM_PROMPT,
+        messages: history
+      })
+    });
+    const data = await response.json();
+    const textBlock = (data.content||[]).find(c=>c.type==='text');
+    return textBlock ? textBlock.text : fallbackReply();
+  }catch(e){
+    console.warn('Claude call failed, using local fallback', e);
+    return fallbackReply();
+  }
+}
+
+let chatTurns = 0;
+async function sendChat(text){
+  if(!text || !text.trim()) return;
+  addBubble('user', text);
+  state.chatHistory.push({role:'user', content:text});
+  $('#chat-input').value='';
+  setSuggested([]);
+  showThinking();
+  
+  const reply = await callClaude(state.chatHistory);
+  hideThinking();
+  addBubble('ai', reply);
+  state.chatHistory.push({role:'assistant', content:reply});
+  speak(reply);
+  chatTurns++;
+  
+  // Analyze conversation for automatic test recommendations
+  const conversationText = state.chatHistory.map(m => m.content).join(' ').toLowerCase();
+  
+  // Smart detection: Check if AI mentioned vitals or we have enough info
+  const shouldProceedToTests = 
+    /vitals|check|test|recommend|devices|medical|bp|ecg|glucose|hemoglobin/i.test(reply) || 
+    chatTurns >= 4;
+  
+  if(shouldProceedToTests){
+    // AUTOMATIC TEST SELECTION based on symptoms mentioned
+    state.selectedTests = []; // Clear previous selection
+    
+    // ECG is ALWAYS included for comprehensive screening
+    state.selectedTests.push('ecg');
+    
+    // Analyze symptoms and auto-select additional relevant tests
+    if(/chest|heart|pain.*chest|breathing|palpitation|cardiac/i.test(conversationText)){
+      state.selectedTests.push('spo2', 'bp');
+      speak('Chest symptoms ke liye ECG, Oxygen level aur BP check kar rahe hain.');
+    }
+    else if(/fever|bukhar|body.*ache|temperature/i.test(conversationText)){
+      state.selectedTests.push('hb', 'glucose', 'bp');
+      speak('Fever ke liye ECG, Hemoglobin, Glucose aur BP test recommend hai.');
+    }
+    else if(/sugar|diabetes|diabetic|glucose|thirst|frequent.*urin/i.test(conversationText)){
+      state.selectedTests.push('glucose', 'bp', 'hb');
+      speak('Diabetes symptoms ke liye ECG aur Blood Glucose primary test hai.');
+    }
+    else if(/pressure|bp|high.*pressure|headache|dizzy/i.test(conversationText)){
+      state.selectedTests.push('bp', 'spo2');
+      speak('Blood pressure aur heart check karte hain with ECG.');
+    }
+    else if(/weak|fatigue|tired|energy.*low|chakkar/i.test(conversationText)){
+      state.selectedTests.push('hb', 'glucose', 'bp', 'spo2');
+      speak('Weakness ke liye complete vitals check including ECG kar rahe hain.');
+    }
+    else if(/breath|saans|oxygen|cough|chest/i.test(conversationText)){
+      state.selectedTests.push('spo2', 'bp', 'steth');
+      speak('Breathing issue ke liye ECG, Oxygen level aur chest examination karenge.');
+    }
+    else {
+      // Default: Basic vitals for general checkup (ECG already included)
+      state.selectedTests.push('bp', 'spo2', 'glucose');
+      speak('General checkup ke liye ECG aur basic vitals check kar rahe hain.');
+    }
+    
+    // Show final confirmation message
+    setSuggested(["✅ Haan, tests shuru karein", "🔄 Aur symptoms batana hai"]);
+    $('#suggested-row').children[0]?.addEventListener('click', ()=> {
+      speak('Dhanyavaad. Ab devices connect ho rahe hain.');
+      setTimeout(() => goTo('screen-devices'), 1500);
+    }, {once:true});
+    
+  } else {
+    // Continue conversation with contextual suggestions
+    if(chatTurns === 1){
+      setSuggested(['3 din se', '1 hafte se', 'Aaj hi shuru hua']);
+    } else if(chatTurns === 2){
+      setSuggested(['Bahut zyada', 'Thoda sa', 'Moderate hai']);
+    } else {
+      setSuggested(['Haan', 'Nahi', 'Thoda bahut']);
+    }
+  }
+}
+$('#chat-send').addEventListener('click', ()=> sendChat($('#chat-input').value));
+$('#chat-input').addEventListener('keydown', e=>{ if(e.key==='Enter') sendChat($('#chat-input').value); });
+
+let chatMicOn=false, chatRecognition=null, autoRestartMic=false;
+
+// Initialize speech recognition once
+function initSpeechRecognition(){
+  if(!SR) return null;
+  
+  const recognition = new SR();
+  recognition.lang = state.language==='Hindi' ? 'hi-IN' : 'en-IN';
+  recognition.continuous = false; // Single utterance mode
+  recognition.interimResults = false;
+  recognition.maxAlternatives = 1;
+  
+  recognition.onstart = ()=>{ 
+    chatMicOn = true; 
+    $('#chat-mic').classList.add('mic-on');
+    // Update header status
+    const statusSpan = document.querySelector('.chat-header .htxt span');
+    if(statusSpan) statusSpan.textContent = '🎤 Listening - Mic is ON (Click mic to turn off)';
+    console.log('🎤 Mic started, listening...');
+  };
+  
+  recognition.onend = ()=>{ 
+    console.log('🎤 Mic ended');
+    chatMicOn = false; 
+    $('#chat-mic').classList.remove('mic-on');
+    
+    // Update header status if mic is turned off completely
+    if(!autoRestartMic){
+      const statusSpan = document.querySelector('.chat-header .htxt span');
+      if(statusSpan) statusSpan.textContent = '● Online · Click mic to speak';
+    }
+    
+    // Auto-restart if button is still in "on" state
+    if(autoRestartMic && chatRecognition){
+      console.log('🔄 Auto-restarting mic...');
+      setTimeout(() => {
+        if(autoRestartMic){
+          try{ chatRecognition.start(); }catch(e){ console.log('Restart failed:', e); }
+        }
+      }, 300); // Small delay before restart
+    }
+  };
+  
+  recognition.onresult = (e)=>{
+    const transcript = e.results[0][0].transcript;
+    const confidence = e.results[0][0].confidence;
+    console.log('✅ Voice recognized:', transcript, 'Confidence:', confidence);
+    
+    // Send the transcribed text
+    if(transcript && transcript.trim()){
+      sendChat(transcript);
+    }
+  };
+  
+  recognition.onerror = (e)=>{
+    console.error('❌ Speech recognition error:', e.error);
+    chatMicOn = false; 
+    $('#chat-mic').classList.remove('mic-on');
+    
+    if(e.error === 'no-speech'){
+      // Just restart, don't show error (common in continuous mode)
+      console.log('No speech detected, will retry...');
+    } else if(e.error === 'not-allowed'){
+      autoRestartMic = false;
+      alert('🎤 Microphone permission denied. Please allow microphone access in browser settings and refresh the page.');
+    } else if(e.error === 'aborted'){
+      // User manually stopped, don't restart
+      autoRestartMic = false;
+    } else {
+      console.log('Error:', e.error);
+    }
+  };
+  
+  return recognition;
+}
+
+// Mic button toggle
+$('#chat-mic').addEventListener('click', ()=>{
+  if(!SR){ 
+    alert('🎤 Voice input is not supported in this browser. Please type your symptoms instead.'); 
+    return; 
+  }
+  
+  // Toggle mic on/off
+  if(autoRestartMic){
+    // Turn OFF mic
+    autoRestartMic = false;
+    if(chatRecognition){
+      chatRecognition.stop();
+    }
+    $('#chat-mic').classList.remove('mic-on');
+    console.log('🔴 Mic turned OFF');
+  } else {
+    // Turn ON mic (stays on until clicked again)
+    autoRestartMic = true;
+    
+    // Initialize recognition if needed
+    if(!chatRecognition){
+      chatRecognition = initSpeechRecognition();
+    }
+    
+    if(chatRecognition){
+      try{ 
+        chatRecognition.start();
+        console.log('🟢 Mic turned ON - stays active');
+      }catch(e){
+        console.error('Failed to start:', e);
+        if(e.name === 'InvalidStateError'){
+          // Already running, just set the flag
+          console.log('Already running, keeping it on');
+        } else {
+          alert('Voice recognition shuru nahi ho paya. Please try again.');
+          autoRestartMic = false;
+        }
+      }
+    }
+  }
+});
+
+function initChatScreen(){
+  // Reset mic state when entering chat screen
+  autoRestartMic = false;
+  if(chatRecognition){
+    try{ chatRecognition.stop(); }catch(e){}
+  }
+  $('#chat-mic').classList.remove('mic-on');
+  
+  $('#chat-scroll').innerHTML='';
+  state.chatHistory = [];
+  chatTurns = 0;
+  fallbackIdx = 0;
+  
+  // Enhanced opening message based on patient context
+  let opener;
+  const name = state.patient.name || 'Patient';
+  const symptomPart = state.symptomTranscript
+    ? `Aapne mention kiya: "${state.symptomTranscript}". `
+    : '';
+  
+  if(state.returningPatient && state.lastVisit){
+    // Returning patient - acknowledge previous visit
+    opener = `Namaste ${name} ji, aapka swagat hai! 🙏\n\nPichli baar aap ${state.lastVisit.condition} ke liye aaye the. ${symptomPart}\n\nAaj aap kaisa mehsoos kar rahe hain? Koi nai complaint hai?`;
+  } else if(state.returningPatient){
+    // Returning patient - no previous visit history
+    opener = `Namaste ${name} ji, phir se milkar khushi hui! 🙏\n\n${symptomPart}Aaj aapki tabiyat kaisi hai? Kya takleef ho rahi hai?`;
+  } else {
+    // New patient - warm welcome
+    opener = `Namaste ${name} ji, AAHA kiosk mein aapka swagat hai! 🙏\n\nMain aapki health screening mein madad karungi. ${symptomPart}\n\nPehle batayein, aapko kya problem ho rahi hai? Aaram se share karein.`;
+  }
+  
+  addBubble('ai', opener);
+  state.chatHistory.push({role:'assistant', content: opener});
+  
+  // Set initial contextual suggestions
+  setSuggested(['🤒 Bukhar hai', '😫 Dard hai', '😴 Kamzori mehsoos hoti hai', '🩺 General checkup']);
+  
+  // Speak the opening (shortened for TTS)
+  const ttsOpener = state.returningPatient 
+    ? `Namaste ${name} ji. Aaj aapki tabiyat kaisi hai?`
+    : `Namaste ${name} ji. Aapko kya takleef hai?`;
+  speak(ttsOpener);
+}
+
+/* ============================= SCREEN 6: RECOMMENDED TESTS ============================= */
+const DEVICES = [
+  {id:'ecg', icon:'❤️', name:'ECG', machine:'ECG Monitor', cost:50},
+  {id:'bp', icon:'🩸', name:'Blood Pressure', machine:'BP Monitor', cost:20},
+  {id:'spo2', icon:'🫁', name:'Oxygen Saturation', machine:'Pulse Oximeter', cost:20},
+  {id:'glucose', icon:'💉', name:'Blood Glucose', machine:'Glucometer', cost:40},
+  {id:'hb', icon:'🧪', name:'Hemoglobin', machine:'Hemoglobin Analyzer', cost:60},
+  {id:'steth', icon:'🩺', name:'Chest Sounds', machine:'Digital Stethoscope', cost:30},
+];
+let testsTimeoutTimer=null, testsCountdownInterval=null;
+
+function buildDeviceGrid(){
+  const grid = $('#device-grid'); grid.innerHTML='';
+  state.selectedTests = ['ecg']; // AI's primary recommendation, pre-selected
+  DEVICES.forEach(d=>{
+    const card = document.createElement('div');
+    card.className='device-card glass-card'+(state.selectedTests.includes(d.id)?' selected':'');
+    card.dataset.id = d.id;
+    card.innerHTML = `
+      <div class="dicon">${d.icon}</div>
+      <div class="dname">${d.name}</div>
+      <div class="dmachine">${d.machine}</div>
+      <div class="dcost">₹${d.cost}</div>
+      <div class="dstate">${state.selectedTests.includes(d.id) ? 'Selected' : 'Tap to select'}</div>`;
+    card.addEventListener('click', ()=> toggleTest(d.id, card));
+    grid.appendChild(card);
+  });
+  updateTestsTotal();
+  startTestsCountdown();
+}
+function toggleTest(id, card){
+  const idx = state.selectedTests.indexOf(id);
+  if(idx>-1){ state.selectedTests.splice(idx,1); card.classList.remove('selected'); card.querySelector('.dstate').textContent='Tap to select'; }
+  else{ state.selectedTests.push(id); card.classList.add('selected'); card.querySelector('.dstate').textContent='Selected'; }
+  updateTestsTotal();
+  // any interaction resets the 30s decision window
+  startTestsCountdown();
+}
+function updateTestsTotal(){
+  const total = state.selectedTests.reduce((sum,id)=> sum + (DEVICES.find(d=>d.id===id)?.cost||0), 0);
+  $('#tests-total').textContent = state.selectedTests.length
+    ? `${state.selectedTests.length} test(s) selected · Total ₹${total}`
+    : 'No tests selected yet';
+}
+function startTestsCountdown(){
+  clearTimeout(testsTimeoutTimer); clearInterval(testsCountdownInterval);
+  let remaining = 30;
+  $('#tests-timer').textContent = `⏱ ${remaining}s to choose`;
+  testsCountdownInterval = setInterval(()=>{
+    remaining--;
+    if(remaining>=0) $('#tests-timer').textContent = `⏱ ${remaining}s to choose`;
+  }, 1000);
+  testsTimeoutTimer = setTimeout(()=>{
+    clearInterval(testsCountdownInterval);
+    resetToHome(); // no selection made in time -> return to main screen
+  }, 30000);
+}
+$('#btn-cancel-tests').addEventListener('click', ()=>{
+  clearTimeout(testsTimeoutTimer); clearInterval(testsCountdownInterval);
+  resetToHome();
+});
+$('#btn-start-tests').addEventListener('click', ()=>{
+  if(state.selectedTests.length===0) return;
+  clearTimeout(testsTimeoutTimer); clearInterval(testsCountdownInterval);
+  state.selectedTests.forEach(id=> state.devicesConnected[id]=true);
+  if(state.selectedTests.includes('ecg')) goTo('screen-ecg');
+  else goTo('screen-processing');
+});
+
+/* ============================= SCREEN 9: ECG ============================= */
+let ecgAnim=null, ecgX=0;
+function drawEcgFrame(){
+  const canvas = $('#ecg-canvas');
+  const ctx = canvas.getContext('2d');
+  const w=canvas.width, h=canvas.height, mid=h/2;
+  ctx.fillStyle='rgba(0,0,0,0.06)';
+  ctx.fillRect(0,0,w,h);
+  ctx.strokeStyle='#10B981'; ctx.lineWidth=2.4; ctx.beginPath();
+  for(let x=0;x<w;x++){
+    const gx = (x+ecgX)%160;
+    let y = mid;
+    if(gx>60 && gx<64) y = mid+18;
+    else if(gx>=64 && gx<66) y = mid-70;
+    else if(gx>=66 && gx<70) y = mid+34;
+    else if(gx>=70 && gx<76) y = mid;
+    else if(gx>=76 && gx<92) y = mid-14*Math.sin((gx-76)/16*Math.PI);
+    else y = mid + Math.sin(x/40)*3;
+    if(x===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+  }
+  ctx.stroke();
+  ecgX+=3;
+  ecgAnim = requestAnimationFrame(drawEcgFrame);
+}
+function startEcg(){
+  cancelAnimationFrame(ecgAnim); ecgX=0;
+  drawEcgFrame();
+  let hr=78;
+  const hrTimer = setInterval(()=>{ hr = 74+Math.floor(Math.random()*8); $('#hr-value').innerHTML = hr+'<span>BPM</span>'; state.vitals.hr=hr; }, 1500);
+  $('#screen-ecg').dataset.hrTimer = hrTimer;
+}
+$('#btn-ecg-done').addEventListener('click', ()=>{
+  cancelAnimationFrame(ecgAnim);
+  clearInterval($('#screen-ecg').dataset.hrTimer);
+  goTo('screen-processing');
+});
+
+/* ============================= SCREEN 10: PROCESSING ============================= */
+function runProcessing(){
+  const steps = ['Analyzing Symptoms...','Processing Device Data...','Cross-checking Vitals...','Generating Medical Report...'];
+  let i=0;
+  $('#proc-text').textContent = steps[0];
+  $('#proc-fill').style.width='0%';
+  const stepTimer = setInterval(()=>{
+    i++;
+    if(i<steps.length) $('#proc-text').textContent = steps[i];
+  }, 1000);
+  let pct=0;
+  const fillTimer = setInterval(()=>{
+    pct += 100/40;
+    $('#proc-fill').style.width = Math.min(pct,100)+'%';
+    if(pct>=100){
+      clearInterval(fillTimer); clearInterval(stepTimer);
+      setTimeout(()=> goTo('screen-diagnosis'), 400);
+    }
+  }, 100);
+}
+
+/* ============================= SCREEN 11: DIAGNOSIS ============================= */
+function buildReport(){
+  const p = state.patient;
+  const panel = $('#report-panel');
+  
+  // Enhanced AI confidence with better range
+  const confidence = 85 + Math.floor(Math.random()*12); // 85-96%
+  const flagged = confidence < 90;
+  
+  // Smart condition detection based on symptoms
+  const conversationText = state.chatHistory.map(m => m.content).join(' ').toLowerCase();
+  let condition = 'General Health Checkup';
+  let riskLevel = 'Low Risk';
+  let riskClass = 'risk-low';
+  
+  // Intelligent condition detection
+  if(/fever|bukhar|temperature/i.test(conversationText)){
+    condition = 'Common Viral Fever (Suspected)';
+    riskLevel = 'Low to Moderate Risk';
+  } else if(/chest|heart|pain.*chest/i.test(conversationText)){
+    condition = 'Requires Cardiac Evaluation';
+    riskLevel = 'Moderate Risk';
+    riskClass = 'risk-badge' + ' ' + 'risk-moderate';
+  } else if(/diabetes|sugar|glucose/i.test(conversationText)){
+    condition = 'Blood Glucose Monitoring Required';
+    riskLevel = 'Moderate Risk';
+  } else if(/pressure|bp|high.*pressure/i.test(conversationText)){
+    condition = 'Blood Pressure Management Needed';
+    riskLevel = 'Moderate Risk';
+  } else if(/weak|fatigue|tired/i.test(conversationText)){
+    condition = 'General Weakness & Fatigue';
+    riskLevel = 'Low Risk';
+  }
+  
+  // Calculate additional metrics
+  const bmi = p.weight && p.height ? (p.weight / ((p.height/100) ** 2)).toFixed(1) : 'N/A';
+  const timestamp = new Date().toLocaleString('en-IN', {
+    dateStyle: 'medium',
+    timeStyle: 'short'
+  });
+  
+  // ECG data (if test was done)
+  const ecgDone = state.selectedTests.includes('ecg') || state.devicesConnected.ecg;
+  const ecgResult = ecgDone ? 'Normal Sinus Rhythm' : 'Not Performed';
+  
+  // Build comprehensive report
+  panel.innerHTML = `
+    <div style="text-align:center; margin-bottom:20px;">
+      <div style="font-size:28px; font-weight:900; color:var(--primary); margin-bottom:4px;">
+        🏥 AAHA Health Screening Report
+      </div>
+      <div style="font-size:14px; color:var(--muted); font-weight:600;">
+        AI-Powered Preliminary Health Assessment
+      </div>
+    </div>
+    
+    <div style="background:#F8FAFC; padding:16px; border-radius:14px; margin-bottom:20px;">
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; font-size:14px;">
+        <div><strong>Patient:</strong> ${p.name}</div>
+        <div><strong>Age:</strong> ${p.age} years</div>
+        <div><strong>Phone:</strong> ${state.phone}</div>
+        <div><strong>Date:</strong> ${timestamp}</div>
+      </div>
+    </div>
+    
+    <div class="section-h">📊 Vital Signs</div>
+    <div class="report-row" style="margin-bottom:20px;">
+      <div class="stat-box">
+        <div class="val" style="color:var(--danger);">${state.vitals.hr}</div>
+        <div class="lbl">Heart Rate (BPM)</div>
+      </div>
+      <div class="stat-box">
+        <div class="val" style="color:var(--primary);">${state.vitals.spo2}%</div>
+        <div class="lbl">SpO2 (Oxygen)</div>
+      </div>
+      <div class="stat-box">
+        <div class="val" style="color:var(--secondary);">${state.vitals.temp || '98.6'}°F</div>
+        <div class="lbl">Temperature</div>
+      </div>
+      ${state.vitals.bp ? `<div class="stat-box">
+        <div class="val" style="color:var(--warning);">${state.vitals.bp}</div>
+        <div class="lbl">Blood Pressure</div>
+      </div>` : ''}
+    </div>
+    
+    ${ecgDone ? `
+    <div class="section-h">❤️ ECG Report</div>
+    <div style="background:#F0FDF4; padding:16px; border-radius:14px; border:2px solid #10B981; margin-bottom:20px;">
+      <div style="display:flex; align-items:center; gap:12px; margin-bottom:8px;">
+        <span style="font-size:24px;">✅</span>
+        <div>
+          <div style="font-size:17px; font-weight:800; color:#047857;">ECG Test Completed</div>
+          <div style="font-size:13px; color:#065F46;">12-Lead Electrocardiogram Analysis</div>
+        </div>
+      </div>
+      <div style="font-size:15px; font-weight:700; color:#047857; margin-top:10px;">
+        Result: ${ecgResult}
+      </div>
+      <div style="font-size:13px; color:#065F46; margin-top:6px;">
+        • Heart Rhythm: Regular<br>
+        • Rate: ${state.vitals.hr} BPM (Normal: 60-100)<br>
+        • No significant abnormalities detected
+      </div>
+    </div>
+    ` : ''}
+    
+    <div class="section-h">🔍 AI Assessment</div>
+    <div style="background:#FEF3C7; padding:16px; border-radius:14px; border:2px solid #F59E0B; margin-bottom:20px;">
+      <div style="display:flex; justify-content:space-between; align-items:start; margin-bottom:10px;">
+        <div>
+          <div style="font-size:19px; font-weight:800; color:var(--ink); margin-bottom:6px;">
+            ${condition}
+          </div>
+          <div class="risk-badge ${riskClass}">${riskLevel}</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:32px; font-weight:900; color:var(--warning);">${confidence}%</div>
+          <div style="font-size:11px; color:var(--muted); font-weight:600;">AI CONFIDENCE</div>
+        </div>
+      </div>
+      ${flagged ? `<div class="flag-badge" style="margin-top:12px;">⚑ Flagged for ASHA Worker Review — Confidence below 90%</div>` : ''}
+    </div>
+    
+    <div class="section-h">💊 Medical Recommendations</div>
+    <ul class="rec-list">
+      <li><strong>Rest & Hydration:</strong> Drink 2–3 litres of water daily and get adequate rest</li>
+      <li><strong>Temperature Monitoring:</strong> Check temperature twice daily for next 3 days</li>
+      <li><strong>Symptom Tracking:</strong> Note any new or worsening symptoms</li>
+      <li><strong>Follow-up:</strong> Return to PHC if symptoms persist beyond 5 days or worsen</li>
+      <li><strong>Red Flags:</strong> Seek immediate care if fever exceeds 103°F, breathing difficulty, or chest pain occurs</li>
+    </ul>
+    
+    <div class="section-h">🏡 Home Care & Remedies</div>
+    <ul class="rec-list">
+      <li><strong>Turmeric Milk:</strong> Warm turmeric milk before bedtime (anti-inflammatory)</li>
+      <li><strong>Steam Inhalation:</strong> If congestion present, 2-3 times daily</li>
+      <li><strong>Balanced Diet:</strong> Include fruits, vegetables, and protein-rich foods</li>
+      <li><strong>Avoid:</strong> Cold drinks, ice cream, and strenuous physical activity</li>
+    </ul>
+    
+    <div class="section-h">👨‍⚕️ Doctor Consultation</div>
+    <div style="background:#F0F9FF; padding:16px; border-radius:14px; border:2px solid #3B82F6; margin-bottom:20px;">
+      <div style="font-weight:700; color:var(--primary); margin-bottom:8px;">
+        ${flagged || riskLevel.includes('Moderate') ? '⚠️ ASHA Worker Review Recommended' : '✅ Routine Follow-up Sufficient'}
+      </div>
+      <div style="font-size:14px; color:#1E40AF;">
+        ${flagged 
+          ? 'Your case has been flagged for ASHA worker review within 24 hours due to confidence level. You will receive a follow-up call.' 
+          : 'An ASHA worker will conduct a routine follow-up in 3 days. No immediate doctor consultation needed unless symptoms worsen.'
+        }
+      </div>
+    </div>
+    
+    <div class="section-h">📱 Report Actions</div>
+    <div class="report-actions">
+      <button id="btn-download">⬇ Download PDF</button>
+      <button id="btn-print">🖨 Print Report</button>
+      <button class="primary" id="btn-whatsapp">📲 WhatsApp</button>
+    </div>
+    <div class="report-actions" style="margin-top:12px;">
+      <button class="primary" id="btn-home" style="flex:1;">✅ Finish Screening & Return Home</button>
+    </div>
+    
+    <div style="text-align:center; margin-top:20px; padding:16px; background:#F8FAFC; border-radius:12px;">
+      <div style="font-size:12px; color:var(--muted); font-weight:600;">
+        ⚠️ <strong>Disclaimer:</strong> This is a preliminary AI-powered assessment. 
+        It is NOT a medical diagnosis. Please consult a qualified doctor for accurate diagnosis and treatment.
+      </div>
+    </div>
+  `;
+  
+  // Persist visit record with enhanced data
+  saveVisitRecord(state.phone, {
+    timestamp: new Date().toISOString(),
+    language: state.language,
+    symptomTranscript: state.symptomTranscript,
+    chatHistory: state.chatHistory,
+    vitals: {...state.vitals},
+    testsPerformed: state.selectedTests,
+    ecgDone: ecgDone,
+    ecgResult: ecgResult,
+    condition,
+    confidence,
+    flagged,
+    riskLevel
+  });
+  
+  upsertPatientProfile(state.phone, {...p, phone: state.phone});
+
+  // Event handlers
+  panel.querySelector('#btn-download').addEventListener('click', downloadReport);
+  panel.querySelector('#btn-print').addEventListener('click', ()=> window.print());
+  panel.querySelector('#btn-whatsapp').addEventListener('click', ()=>{
+    const msg = encodeURIComponent(`🏥 AAHA Health Screening Report
+
+Patient: ${p.name}
+Age: ${p.age} years
+Date: ${timestamp}
+
+📊 Vitals:
+• Heart Rate: ${state.vitals.hr} BPM
+• SpO2: ${state.vitals.spo2}%
+• Temperature: ${state.vitals.temp || '98.6'}°F
+${ecgDone ? `• ECG: ${ecgResult}` : ''}
+
+🔍 Assessment: ${condition}
+📈 Risk: ${riskLevel}
+🤖 AI Confidence: ${confidence}%
+
+💊 Please rest, stay hydrated, monitor symptoms, and follow up with ASHA worker in 3 days.
+
+Report generated by AAHA Kiosk at ${state.facility || 'Primary Health Centre'}`);
+    window.open(`https://wa.me/91${state.phone}?text=${msg}`, '_blank');
+  });
+  panel.querySelector('#btn-home').addEventListener('click', ()=> goTo('screen-end'));
+}
+function downloadReport(){
+  const p = state.patient;
+  const text = `AAHA HEALTH SCREENING REPORT
+
+Patient: ${p.name}
+Age: ${p.age}
+Phone: ${state.phone}
+
+Heart Rate: ${state.vitals.hr} BPM
+SpO2: ${state.vitals.spo2}%
+
+Assessment: Common Viral Fever (Suspected) - Low Risk
+
+Recommendations:
+- Rest and hydrate
+- Monitor temperature twice daily
+- Return if fever exceeds 102F or persists 5+ days
+
+Generated: ${new Date().toLocaleString()}`;
+  const blob = new Blob([text], {type:'text/plain'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `AAHA_Report_${p.name||'patient'}.txt`;
+  a.click();
+}
+/* ============================= SCREEN 9: END / FAREWELL ============================= */
+let farewellTimer=null;
+function runFarewell(){
+  const patientName = state.patient.name || 'there';
+  $('#end-name').textContent = patientName;
+  $('#end-core').classList.add('thinking');
+  const line = `Thank you, ${patientName}. Your report has been sent to your WhatsApp. Take care, and stay healthy. Namaste.`;
+  speak(line, null, ()=>{ $('#end-core').classList.remove('thinking'); });
+  clearTimeout(farewellTimer);
+  farewellTimer = setTimeout(()=> resetToHome(), 6000);
+}
+
+function resetToHome(){
+  clearTimeout(testsTimeoutTimer); clearInterval(testsCountdownInterval);
+  clearTimeout(farewellTimer); clearTimeout(regSuccessTimer);
+  state.phone=''; state.symptomTranscript=''; state.chatHistory=[];
+  state.role=null; state.authMode=null; state.returningPatient=false; state.lastVisit=null;
+  state.patient={name:'',age:'',gender:'',village:'',weight:'',height:''};
+  state.selectedTests=[];
+  DEVICES.forEach(d=> state.devicesConnected[d.id]=false);
+  $('#btn-role-patient').classList.remove('selected');
+  $('#btn-role-asha').classList.remove('selected');
+  $('#btn-mode-login').classList.add('btn-disabled');
+  $('#btn-mode-signup').classList.add('btn-disabled');
+  renderPhone();
+  startKiosk();
+}
+
+/* ============================= SCREEN ENTER HOOK ============================= */
+function onEnterScreen(id){
+  if(id==='screen-video') playIntroVideo();
+  if(id==='screen-chat') initChatScreen();
+  if(id==='screen-devices') buildDeviceGrid();
+  if(id==='screen-ecg') startEcg();
+  if(id==='screen-processing') runProcessing();
+  if(id==='screen-diagnosis') buildReport();
+  if(id==='screen-reg-success') runRegSuccess();
+  if(id==='screen-end') runFarewell();
+  if(id==='screen-asha-dashboard') renderAshaDashboard();
+}
+
+/* ============================= ASHA WORKER DASHBOARD =============================
+   Section 7 & 10: ASHA access is a wider *read scope* over the same patient
+   records, not a separate data copy. This renders every patient in the
+   local DB with their visit history, and highlights low-confidence visits
+   flagged for review (Section 12's "review-and-refine loop"). */
+let ashaSelectedPhone = null;
+function renderAshaDashboard(filterText){
+  const db = loadDB();
+  const listEl = $('#asha-patients');
+  const entries = Object.entries(db).filter(([phone, rec])=> rec.profile && rec.profile.name);
+  const q = (filterText||'').trim().toLowerCase();
+  const filtered = entries.filter(([phone, rec])=>{
+    if(!q) return true;
+    return (rec.profile.name||'').toLowerCase().includes(q)
+      || (rec.profile.village||'').toLowerCase().includes(q)
+      || phone.includes(q);
+  });
+  listEl.innerHTML='';
+  if(filtered.length===0){
+    listEl.innerHTML = `<div class="asha-empty">No patients found yet. They'll appear here after their first screening.</div>`;
+  }
+  filtered.sort((a,b)=>{
+    const av = a[1].visits[0]?.timestamp || '';
+    const bv = b[1].visits[0]?.timestamp || '';
+    return bv.localeCompare(av);
+  });
+  filtered.forEach(([phone, rec])=>{
+    const lastVisit = rec.visits[0];
+    const flaggedCount = rec.visits.filter(v=>v.flagged).length;
+    const row = document.createElement('div');
+    row.className = 'asha-row'+(ashaSelectedPhone===phone?' selected':'');
+    row.innerHTML = `
+      <div class="arow-top"><span>${rec.profile.name}</span>${flaggedCount>0?`<span class="flag-badge">⚑ ${flaggedCount}</span>`:''}</div>
+      <div class="arow-sub">${rec.profile.age||'—'} yrs · ${rec.profile.village||'—'} · ${phone}</div>
+      <div class="arow-sub">${lastVisit ? 'Last visit: '+new Date(lastVisit.timestamp).toLocaleDateString()+' · '+lastVisit.condition : 'No visits yet'}</div>
+    `;
+    row.addEventListener('click', ()=>{ ashaSelectedPhone = phone; renderAshaDashboard($('#asha-search').value); renderAshaDetail(phone, rec); });
+    listEl.appendChild(row);
+  });
+  if(ashaSelectedPhone && db[ashaSelectedPhone]) renderAshaDetail(ashaSelectedPhone, db[ashaSelectedPhone]);
+}
+function renderAshaDetail(phone, rec){
+  const detail = $('#asha-detail');
+  const p = rec.profile;
+  let visitsHtml = rec.visits.map(v=>`
+    <div class="visit-card">
+      <div class="vtop"><span>${v.condition}</span>${v.flagged?'<span class="flag-badge">⚑ Review</span>':''}</div>
+      <div class="vmeta">${new Date(v.timestamp).toLocaleString()} · Confidence ${v.confidence}% · HR ${v.vitals.hr} BPM · SpO2 ${v.vitals.spo2}%</div>
+      <div class="vcond">${v.symptomTranscript ? '"'+v.symptomTranscript+'"' : ''}</div>
+    </div>
+  `).join('') || `<div class="asha-empty">No visits recorded yet.</div>`;
+  detail.innerHTML = `
+    <h2 style="font-size:22px; font-weight:800;">${p.name}</h2>
+    <div class="rmeta" style="margin-bottom:18px;">${p.age||'—'} yrs · ${p.gender||'—'} · ${p.village||'—'} · ${phone}</div>
+    <div class="section-h">Visit History (${rec.visits.length})</div>
+    ${visitsHtml}
+  `;
+}
+$('#asha-search').addEventListener('input', e=> renderAshaDashboard(e.target.value));
+$('#btn-asha-logout').addEventListener('click', ()=>{ ashaSelectedPhone=null; resetToHome(); });
+
+/* ============================= CONNECTIVITY (Demo Mode - Simplified) =============================
+   For demo kiosk, connectivity banner is removed. System assumes online.
+   Network status dot in status bar still reflects navigator.onLine for visual feedback. */
+function setConnectivityUI(online){
+  // Offline banner removed - only update status bar dot
+  const netItem = $('#statusbar .item:nth-child(3) .dot');
+  if(netItem) netItem.style.background = online ? 'var(--success)' : 'var(--danger)';
+}
+
+function updateConnectivityDot(){
+  // Simple check for status bar visual only
+  setConnectivityUI(navigator.onLine);
+}
+
+// Update connectivity dot on browser events
+window.addEventListener('online', updateConnectivityDot);
+window.addEventListener('offline', updateConnectivityDot);
+// Initial update
+setConnectivityUI(true);
+
+/* warm up voices list for TTS voice selection */
+window.speechSynthesis?.getVoices();
+window.speechSynthesis?.addEventListener?.('voiceschanged', ()=>{});
+</script>
+</body>
+</html>

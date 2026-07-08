@@ -1,0 +1,446 @@
+{
+  "workflowId": "pcos-screening-v1",
+  "version": "1.0",
+  "name": "PCOS Screening Workflow",
+  "description": "Structured conversation for PCOS assessment with diet and test recommendations",
+  "phases": [
+    {
+      "phaseId": "opening",
+      "type": "consent",
+      "message": {
+        "en": "From what you've said, I'd like to understand a little more about your cycle and some changes you may have noticed. It's all private, and we'll go at your pace. Okay to start?",
+        "hi": "Aapne jo bataya uske anusar, main aapke periods aur kuch changes ke baare mein jaanna chahti hoon. Sab private rahega, aur hum aapki speed se chalenge. Shuru karein?"
+      },
+      "voiceEnabled": true,
+      "requiredConsent": true
+    },
+    {
+      "phaseId": "symptoms",
+      "type": "questionnaire",
+      "questions": [
+        {
+          "id": "menstrual",
+          "text": {
+            "en": "Let's start with your periods — do they come every month, or do they skip or come late?",
+            "hi": "Chaliye aapke periods se shuru karte hain — kya har mahine aate hain, ya skip hote hain ya late aate hain?"
+          },
+          "type": "choice",
+          "options": ["regular", "skip", "stopped", "irregular"],
+          "followUp": {
+            "skip": {
+              "text": {
+                "en": "Roughly how often — every couple of months, or longer gaps?",
+                "hi": "Lagbhag kitne time mein — har 2-3 mahine mein, ya zyada gap?"
+              },
+              "type": "text"
+            },
+            "stopped": {
+              "text": {
+                "en": "When did you last have one?",
+                "hi": "Aakhri baar kab aaye the?"
+              },
+              "type": "date"
+            }
+          },
+          "weight": 3,
+          "scoringRules": {
+            "regular": 0,
+            "skip": 2,
+            "stopped": 3,
+            "irregular": 2
+          }
+        },
+        {
+          "id": "weight",
+          "text": {
+            "en": "Have you gained weight lately, especially around your middle, that's hard to shift?",
+            "hi": "Kya aapka weight badha hai, khaas kar pet ke aas-paas, jo kam nahi ho raha?"
+          },
+          "type": "yesno",
+          "followUp": {
+            "yes": {
+              "text": {
+                "en": "Has it been recent, or building up over a year or two?",
+                "hi": "Kya yeh haal hi mein hua hai, ya 1-2 saal se ho raha hai?"
+              },
+              "type": "choice",
+              "options": ["recent", "1-2_years", "longer"]
+            }
+          },
+          "weight": 2,
+          "scoringRules": {
+            "yes": 2,
+            "no": 0
+          }
+        },
+        {
+          "id": "hirsutism",
+          "text": {
+            "en": "Have you noticed extra hair growing where you'd rather not — on your face, chin, or body?",
+            "hi": "Kya aapko face, chin ya body pe extra baal aane lage hain jahan nahi hone chahiye?"
+          },
+          "type": "yesno",
+          "sensitive": true,
+          "reassurance": "[gentle pause]",
+          "followUp": {
+            "yes": {
+              "text": {
+                "en": "Is that new, or has it slowly increased?",
+                "hi": "Kya yeh naya hai, ya dheere-dheere badh raha hai?"
+              },
+              "type": "choice",
+              "options": ["new", "slowly_increasing", "always_had"]
+            }
+          },
+          "weight": 3,
+          "scoringRules": {
+            "yes": 3,
+            "no": 0
+          }
+        },
+        {
+          "id": "acne",
+          "text": {
+            "en": "How's your skin — do you get acne or oily skin that keeps coming back?",
+            "hi": "Aapki skin kaisi hai — acne ya oily skin wapas aati rehti hai?"
+          },
+          "type": "yesno",
+          "followUp": {
+            "yes": {
+              "text": {
+                "en": "Mostly around your jaw and chin, or all over?",
+                "hi": "Zyada tar jaw aur chin pe, ya puri face pe?"
+              },
+              "type": "choice",
+              "options": ["jaw_chin", "all_over", "back"]
+            }
+          },
+          "weight": 2,
+          "scoringRules": {
+            "yes": 2,
+            "no": 0
+          }
+        },
+        {
+          "id": "hairfall",
+          "text": {
+            "en": "And the hair on your head — is it thinning or falling more than usual?",
+            "hi": "Aur sir ke baal — kya patli ho rahi hain ya zyada gir rahi hain?"
+          },
+          "type": "yesno",
+          "weight": 2,
+          "scoringRules": {
+            "yes": 2,
+            "no": 0
+          }
+        },
+        {
+          "id": "darkpatches",
+          "text": {
+            "en": "Have you noticed any dark, velvety patches of skin — maybe on your neck or underarms?",
+            "hi": "Kya aapne skin pe kaale, velvety patches dekhe hain — gardan ya underarms pe?"
+          },
+          "type": "yesno",
+          "weight": 2,
+          "scoringRules": {
+            "yes": 2,
+            "no": 0
+          }
+        },
+        {
+          "id": "energy",
+          "text": {
+            "en": "How's your energy through the day — do you feel drained or get strong sugar cravings, especially after meals?",
+            "hi": "Din bhar aapki energy kaisi rehti hai — kamzori mehsoos hoti hai ya meetha khaane ka mann karta hai khaas kar khane ke baad?"
+          },
+          "type": "choice",
+          "options": ["feel_good", "tired_sometimes", "very_tired", "sugar_cravings"],
+          "weight": 2,
+          "scoringRules": {
+            "feel_good": 0,
+            "tired_sometimes": 1,
+            "very_tired": 2,
+            "sugar_cravings": 2
+          }
+        },
+        {
+          "id": "thyroid",
+          "text": {
+            "en": "A few of these can also come from the thyroid, so let me check — do you often feel unusually cold or tired, or noticed any swelling in your neck?",
+            "hi": "Ye symptoms thyroid se bhi ho sakte hain — kya aapko bahut thandi lagti hai, ya bahut thakan hoti hai, ya gardan mein swelling hai?"
+          },
+          "type": "choice",
+          "options": ["no", "cold_tired", "neck_swelling", "both"],
+          "followUp": {
+            "neck_swelling": {
+              "text": {
+                "en": "Can you feel it when you swallow, or did someone point it out?",
+                "hi": "Kya aap usko feel kar sakte hain jab aap nigalte hain, ya kisi ne bataya?"
+              },
+              "type": "text"
+            },
+            "both": {
+              "text": {
+                "en": "Can you feel it when you swallow, or did someone point it out?",
+                "hi": "Kya aap usko feel kar sakte hain jab aap nigalte hain, ya kisi ne bataya?"
+              },
+              "type": "text"
+            }
+          },
+          "weight": 2,
+          "scoringRules": {
+            "no": 0,
+            "cold_tired": 1,
+            "neck_swelling": 2,
+            "both": 3
+          }
+        },
+        {
+          "id": "family",
+          "text": {
+            "en": "Does anyone in your family have PCOS, thyroid trouble, or diabetes?",
+            "hi": "Kya aapke ghar mein kisi ko PCOS, thyroid ya diabetes hai?"
+          },
+          "type": "choice",
+          "options": ["no", "pcos", "thyroid", "diabetes", "multiple"],
+          "weight": 2,
+          "scoringRules": {
+            "no": 0,
+            "pcos": 2,
+            "thyroid": 1,
+            "diabetes": 2,
+            "multiple": 3
+          }
+        }
+      ]
+    },
+    {
+      "phaseId": "diet",
+      "type": "questionnaire",
+      "intro": {
+        "en": "Now a little about your food...",
+        "hi": "Ab thoda aapke khane ke baare mein..."
+      },
+      "questions": [
+        {
+          "id": "diet_type",
+          "text": {
+            "en": "Are you mostly vegetarian, or do you eat eggs, chicken, fish too?",
+            "hi": "Kya aap vegetarian hain, ya anda, chicken, machhli khaate hain?"
+          },
+          "type": "choice",
+          "options": ["vegetarian", "eggs", "non_veg", "vegan"],
+          "weight": 1
+        },
+        {
+          "id": "diet_meals",
+          "text": {
+            "en": "On a usual day, do you eat regular meals, or do they get skipped or rushed?",
+            "hi": "Aam din mein aap regular khana khaate hain, ya skip hota hai ya jaldi-jaldi khaate hain?"
+          },
+          "type": "choice",
+          "options": ["regular", "skip_sometimes", "skip_often", "rushed"],
+          "followUp": {
+            "skip_sometimes": {
+              "text": {
+                "en": "Which one usually gets missed?",
+                "hi": "Kaunsa meal usually miss hota hai?"
+              },
+              "type": "choice",
+              "options": ["breakfast", "lunch", "dinner"]
+            },
+            "skip_often": {
+              "text": {
+                "en": "Which one usually gets missed?",
+                "hi": "Kaunsa meal usually miss hota hai?"
+              },
+              "type": "choice",
+              "options": ["breakfast", "lunch", "dinner"]
+            }
+          },
+          "weight": 2
+        },
+        {
+          "id": "diet_plate",
+          "text": {
+            "en": "What does your plate usually look like — mostly rice or roti, with dal or vegetables?",
+            "hi": "Aapki plate mein usually kya hota hai — zyada chawal ya roti, dal ya sabzi?"
+          },
+          "type": "text",
+          "weight": 1
+        },
+        {
+          "id": "diet_sugar",
+          "text": {
+            "en": "Do you take a lot of sweets, sugary tea, or cold drinks through the day?",
+            "hi": "Kya aap din mein bahut meetha, cheeni wali chai ya cold drinks lete hain?"
+          },
+          "type": "yesno",
+          "followUp": {
+            "yes": {
+              "text": {
+                "en": "Is it more a daily habit, or mostly on occasions?",
+                "hi": "Kya yeh roz ki aadat hai, ya khaas occasions pe?"
+              },
+              "type": "choice",
+              "options": ["daily", "occasions", "few_times_week"]
+            }
+          },
+          "weight": 2
+        },
+        {
+          "id": "diet_fried",
+          "text": {
+            "en": "And fried or outside food — how often in a week?",
+            "hi": "Aur fried ya bahar ka khana — hafte mein kitni baar?"
+          },
+          "type": "choice",
+          "options": ["rarely", "1-2_times", "3-4_times", "daily"],
+          "weight": 2
+        }
+      ]
+    },
+    {
+      "phaseId": "tests",
+      "type": "clinical",
+      "intro": {
+        "en": "Thank you for being open with me. Now let's do a few quick checks — your height and weight, blood pressure, and a small blood test. Aasha didi will help, no hurry.",
+        "hi": "Dhanyavaad. Ab kuch quick checks karte hain — height, weight, BP aur blood test. ASHA didi help karengi, koi jaldi nahi."
+      },
+      "tests": [
+        {
+          "testId": "height_weight",
+          "name": "Height & Weight",
+          "consentRequired": true,
+          "consentMessage": {
+            "en": "First, let's check your height and weight — just step on the scale please.",
+            "hi": "Pehle height aur weight check karte hain — bas scale pe khade ho jaiye."
+          },
+          "duration": 30,
+          "optional": false,
+          "deviceType": "bmi_scale"
+        },
+        {
+          "testId": "bp",
+          "name": "Blood Pressure",
+          "consentRequired": true,
+          "consentMessage": {
+            "en": "I'd like to take your blood pressure — just a cuff on your arm for 30 seconds. Shall we?",
+            "hi": "BP check karna hai — bas arm pe cuff lagega 30 second ke liye. Karein?"
+          },
+          "duration": 45,
+          "optional": false,
+          "deviceType": "bp_monitor"
+        },
+        {
+          "testId": "glucose",
+          "name": "Blood Glucose",
+          "consentRequired": true,
+          "consentMessage": {
+            "en": "Let me check your blood sugar now — a tiny prick on your fingertip. May I go ahead?",
+            "hi": "Ab blood sugar check karte hain — ungli pe chhoti si chubhan hogi. Karein?"
+          },
+          "duration": 60,
+          "optional": true,
+          "deviceType": "glucometer"
+        },
+        {
+          "testId": "hemoglobin",
+          "name": "Hemoglobin",
+          "consentRequired": true,
+          "consentMessage": {
+            "en": "Now I'd like to check your haemoglobin — it's just a tiny prick on your fingertip, takes a minute. Aasha didi will do it for you, no hurry. Shall we do it now?",
+            "hi": "Ab hemoglobin check karna hai — ungli pe chhoti si chubhan, ek minute lagega. ASHA didi karegi, koi jaldi nahi. Karein?"
+          },
+          "duration": 90,
+          "optional": true,
+          "deviceType": "hb_analyzer"
+        },
+        {
+          "testId": "thyroid",
+          "name": "Thyroid Function",
+          "consentRequired": true,
+          "consentMessage": {
+            "en": "Since thyroid symptoms came up, I'd like to do a thyroid test too — another small blood sample. Okay?",
+            "hi": "Kyunki thyroid ke symptoms the, thyroid test bhi karna hai — ek aur chhota blood sample. Thik hai?"
+          },
+          "duration": 120,
+          "optional": true,
+          "deviceType": "blood_test",
+          "conditional": {
+            "questionId": "thyroid",
+            "values": ["neck_swelling", "both", "cold_tired"]
+          }
+        }
+      ]
+    },
+    {
+      "phaseId": "closing",
+      "type": "summary",
+      "message": {
+        "en": "Once we're done I'll put it together in simple words and we'll talk about the next step. PCOS is very manageable once we understand it.",
+        "hi": "Jab sab ho jayega, main simple shabdon mein samjhaaungi aur next step discuss karenge. PCOS manageable hai jab hum isse samajh lete hain."
+      }
+    }
+  ],
+  "scoring": {
+    "algorithm": "weighted_sum",
+    "maxScore": 30,
+    "thresholds": {
+      "low": [0, 10],
+      "moderate": [11, 20],
+      "high": [21, 30]
+    }
+  },
+  "dietRules": {
+    "skipMeals": {
+      "trigger": ["skip_sometimes", "skip_often"],
+      "advice": {
+        "en": "Don't skip meals, especially breakfast — it helps control sugar cravings and balances hormones.",
+        "hi": "Khana skip mat kijiye, khaas kar breakfast — yeh sugar cravings control karta hai aur hormones balance karta hai."
+      },
+      "priority": "high"
+    },
+    "highSugar": {
+      "trigger": ["yes"],
+      "questionId": "diet_sugar",
+      "advice": {
+        "en": "Reduce sugary tea, cold drinks, and sweets — PCOS makes your body sensitive to sugar spikes.",
+        "hi": "Meethi chai, cold drinks aur mithai kam karein — PCOS mein body sugar ke liye sensitive hoti hai."
+      },
+      "priority": "critical"
+    },
+    "vegetarianProtein": {
+      "trigger": ["vegetarian", "vegan"],
+      "questionId": "diet_type",
+      "advice": {
+        "en": "Add protein to every meal — dal, sprouts, paneer. Protein slows sugar absorption.",
+        "hi": "Har meal mein protein add karein — dal, ankurit anaj, paneer. Protein sugar absorption slow karta hai."
+      },
+      "priority": "high"
+    },
+    "friedFood": {
+      "trigger": ["3-4_times", "daily"],
+      "questionId": "diet_fried",
+      "advice": {
+        "en": "Cut down fried and outside food — aim for 2-3 times a week maximum instead of daily.",
+        "hi": "Fried aur bahar ka khana kam karein — hafte mein maximum 2-3 baar, daily nahi."
+      },
+      "priority": "high"
+    },
+    "general": [
+      {
+        "en": "Fill half your plate with vegetables — they help manage weight and insulin.",
+        "hi": "Apni plate ka aadha hissa sabziyon se bharein — weight aur insulin manage karne mein help hota hai."
+      },
+      {
+        "en": "Choose whole grains over refined — brown rice, millets, whole wheat.",
+        "hi": "Refined ki jagah whole grains lein — brown rice, millets, gehoon ka atta."
+      },
+      {
+        "en": "Drink 2-3 litres of water daily for hormone balance.",
+        "hi": "Hormone balance ke liye roz 2-3 litre paani piyein."
+      }
+    ]
+  }
+}

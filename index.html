@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>AAHA — AI Health Screening Kiosk</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Noto+Sans+Devanagari:wght@500;700&display=swap" rel="stylesheet">
@@ -40,9 +40,18 @@ body{
     radial-gradient(1400px 900px at 50% 120%, rgba(16,185,129,0.08), transparent 60%),
     linear-gradient(180deg,#F6FBFC 0%, #EEF6F7 45%, #E9F3F4 100%);
   overflow:hidden;
+  /* Kiosk vertical display optimization */
   height:100vh;
   width:100vw;
+  max-width:1080px; /* Typical kiosk portrait width */
+  margin:0 auto;
   position:relative;
+}
+/* Optimize for vertical kiosk (9:16 or similar ratio) */
+@media (min-aspect-ratio: 10/16) {
+  body {
+    max-width:720px;
+  }
 }
 #app{position:relative; width:100%; height:100%;}
 
@@ -412,6 +421,238 @@ canvas{width:100%; height:220px; border-radius:16px; background:rgba(0,0,0,0.35)
 .visit-card .vmeta{font-size:12px; color:#5b6b8c; font-weight:600; margin-top:2px;}
 .visit-card .vcond{margin-top:8px; font-weight:700; color:var(--primary);}
 #btn-asha-logout{margin-top:10px;}
+
+/* ---------- NEW: AAHA CARTOON FACE (Eyebrows + Eyes + Pupils + Mouth) ---------- */
+.aaha-eyes-container{
+  display:flex; 
+  flex-direction:column;
+  align-items:center; 
+  justify-content:center;
+  position:relative;
+  animation:float-gentle 3s ease-in-out infinite;
+  gap:8px;
+}
+@keyframes float-gentle{
+  0%, 100%{transform:translateY(0);}
+  50%{transform:translateY(-6px);}
+}
+
+/* Eyebrows */
+.aaha-eyes-container .eyebrows{
+  display:flex;
+  gap:30px;
+  margin-bottom:5px;
+}
+.aaha-eyes-container .eyebrow{
+  width:40px;
+  height:10px;
+  background:#0B1220;
+  border-radius:50% 50% 0 0;
+  transform:rotate(-8deg);
+  transition:transform .3s ease;
+}
+.aaha-eyes-container .eyebrow.right{
+  transform:rotate(8deg) scaleX(-1);
+}
+
+/* Eyes row */
+.aaha-eyes-container .eyes-row{
+  display:flex;
+  gap:20px;
+  align-items:center;
+}
+
+/* Eye (white oval with border) */
+.aaha-eye{
+  width:55px;
+  height:70px;
+  border-radius:50%;
+  background:radial-gradient(circle at 40% 30%, #ffffff, #F3F7FF 50%, #E4EAF7 100%);
+  border:4px solid #0B1220;
+  box-shadow:0 3px 10px rgba(0,0,0,0.25);
+  position:relative;
+  animation:eye-blink-cartoon 5s ease-in-out infinite;
+  overflow:hidden;
+}
+.aaha-eye.right-eye{
+  animation-delay:.2s;
+}
+
+/* Pupil (black circle inside eye) */
+.aaha-eye .pupil{
+  position:absolute;
+  width:22px;
+  height:22px;
+  border-radius:50%;
+  background:#0B1220;
+  top:60%;
+  left:50%;
+  transform:translate(-50%, -50%);
+  transition:transform .3s cubic-bezier(.34,1.2,.4,1);
+  box-shadow:inset 0 0 3px rgba(255,255,255,0.4);
+}
+/* White reflection in pupil */
+.aaha-eye .pupil::after{
+  content:'';
+  position:absolute;
+  width:6px;
+  height:6px;
+  border-radius:50%;
+  background:rgba(255,255,255,0.95);
+  top:3px;
+  left:3px;
+}
+
+/* Blink animation */
+@keyframes eye-blink-cartoon{
+  0%, 93%, 100%{transform:scaleY(1);}
+  96%{transform:scaleY(0.05);}
+}
+
+/* Mouth (small rounded rectangle below eyes) */
+.aaha-eyes-container .mouth{
+  width:40px;
+  height:8px;
+  background:#0B1220;
+  border-radius:20px;
+  margin-top:8px;
+}
+
+/* Thinking state - pupils move */
+.aaha-eyes-container.thinking .pupil{
+  animation:pupil-think 2.5s ease-in-out infinite;
+}
+@keyframes pupil-think{
+  0%, 100%{transform:translate(-50%, -50%);}
+  25%{transform:translate(-30%, -60%);}
+  50%{transform:translate(-50%, -50%);}
+  75%{transform:translate(-70%, -60%);}
+}
+
+/* Listening state - eyes slightly wider */
+.aaha-eyes-container.listening .aaha-eye{
+  width:60px;
+  height:75px;
+}
+
+/* Happy state - mouth becomes smile */
+.aaha-eyes-container.happy .mouth{
+  width:50px;
+  height:15px;
+  border:3px solid #0B1220;
+  border-top:none;
+  border-radius:0 0 50px 50px;
+  background:transparent;
+}
+
+/* Asleep state - eyes closed */
+.aaha-eyes-container.asleep .aaha-eye{
+  height:6px;
+  border-radius:4px;
+  opacity:0.4;
+}
+
+/* Calm state - slower blink */
+.aaha-eyes-container.calm .aaha-eye{
+  animation:eye-blink-cartoon 7s ease-in-out infinite;
+}
+
+/* AAHA eyes in middle of chat (during conversation) */
+.chat-aaha-avatar{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  margin:24px 0;
+  gap:12px;
+}
+.chat-aaha-avatar .aaha-eyes-container{
+  /* Slightly smaller for in-chat display */
+  transform:scale(0.7);
+}
+.chat-aaha-status{
+  font-size:13px;
+  font-weight:600;
+  color:var(--muted);
+  font-style:italic;
+}
+
+/* Avatar Center Animation for Key Moments */
+.aaha-eyes-container{
+  transition: all 0.8s cubic-bezier(0.4, 0.0, 0.2, 1);
+  position: relative; /* Default position */
+}
+
+.aaha-eyes-container.centered{
+  position: fixed !important;
+  left: 50% !important;
+  top: 30% !important; /* Higher position to avoid text */
+  transform: translate(-50%, -50%) scale(1.4) !important;
+  z-index: 1000 !important;
+  filter: drop-shadow(0 10px 40px rgba(11, 18, 32, 0.4));
+  pointer-events: none; /* Allow clicks through avatar */
+}
+
+/* Dim background when avatar is centered */
+.screen.avatar-centered::before{
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: rgba(11, 18, 32, 0.4);
+  backdrop-filter: blur(2px);
+  z-index: 999;
+  animation: fadeIn 0.5s ease;
+}
+
+/* Push content down when avatar is centered */
+.aaha-eyes-wrapper.avatar-space{
+  height: 180px; /* Reserve space for centered avatar */
+  visibility: hidden; /* Hide original position */
+}
+
+/* Ensure buttons and cards stay below avatar */
+.screen.avatar-centered .glass-card,
+.screen.avatar-centered .light-card,
+.screen.avatar-centered .btn,
+.screen.avatar-centered button{
+  margin-top: 15px;
+  z-index: 998;
+  position: relative;
+}
+
+
+@keyframes fadeIn{
+  from{ opacity: 0; }
+  to{ opacity: 1; }
+}
+
+/* ---------- NEW: TEST FLOW COMPONENTS ---------- */
+.result-badge{
+  display:inline-block; padding:12px 24px; border-radius:12px; 
+  font-size:16px; font-weight:700; margin-bottom:24px;
+}
+.result-badge.normal{
+  background:#E7F8F0; color:var(--success); border:2px solid #10B981;
+}
+.result-badge.monitor{
+  background:#FEF3C7; color:#B45309; border:2px solid #F59E0B;
+}
+.result-badge.alert{
+  background:#FEE2E2; color:#B91C1C; border:2px solid #EF4444;
+}
+
+/* Time slot selector */
+.time-slot-label{
+  display:block; padding:14px; border-radius:10px; border:2px solid var(--glass-border);
+  background:rgba(15,23,42,0.045); text-align:center; cursor:pointer;
+  font-weight:600; font-size:14px; transition:all .2s ease;
+}
+.time-slot input:checked + .time-slot-label{
+  background:linear-gradient(135deg,var(--secondary),var(--primary));
+  color:#fff; border-color:transparent;
+}
+.time-slot-label:hover{
+  background:rgba(37,99,235,0.1); border-color:var(--primary);
+}
 </style>
 </head>
 <body>
@@ -548,6 +789,186 @@ canvas{width:100%; height:220px; border-radius:16px; background:rgba(0,0,0,0.35)
     </div>
   </section>
 
+  <!-- NEW: SCREEN 6A - TEST CONSENT (for each test) -->
+  <section class="screen" id="screen-test-consent">
+    <div class="test-consent-panel glass-card" style="width:600px; padding:50px; text-align:center;">
+      <!-- AAHA Cartoon Face (centered, blinking) -->
+      <div class="aaha-eyes-wrapper" style="display:flex; justify-content:center; margin-bottom:30px;">
+        <div class="aaha-eyes-container" id="consent-eyes">
+          <div class="eyebrows">
+            <div class="eyebrow left"></div>
+            <div class="eyebrow right"></div>
+          </div>
+          <div class="eyes-row">
+            <div class="aaha-eye left-eye">
+              <div class="pupil"></div>
+            </div>
+            <div class="aaha-eye right-eye">
+              <div class="pupil"></div>
+            </div>
+          </div>
+          <div class="mouth"></div>
+        </div>
+      </div>
+      
+      <div id="consent-test-icon" style="font-size:64px; margin-bottom:20px;">❤️</div>
+      <h2 id="consent-test-name" style="font-size:32px; font-weight:800; margin-bottom:16px; color:var(--ink);">ECG Test</h2>
+      
+      <div id="consent-message" style="font-size:20px; font-weight:600; color:var(--muted); margin-bottom:30px; line-height:1.6;">
+        May I perform an ECG test? Please attach the electrodes to your chest.
+      </div>
+      
+      <div id="consent-explanation" style="font-size:16px; color:var(--muted); margin-bottom:30px; padding:20px; background:rgba(37,99,235,0.05); border-radius:12px;">
+        ECG records your heart's electrical activity to detect rhythm issues.
+      </div>
+      
+      <div style="display:flex; gap:16px; justify-content:center;">
+        <button class="btn btn-ghost" id="btn-skip-test">⏭ Skip This Test</button>
+        <button class="btn btn-primary" id="btn-consent-yes">✓ Yes, Continue</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- NEW: SCREEN 6B - TEST EXECUTION (running test with AAHA) -->
+  <section class="screen" id="screen-test-running">
+    <div class="test-running-panel glass-card" style="width:600px; padding:50px; text-align:center;">
+      <!-- AAHA Cartoon Face (centered, thinking) -->
+      <div class="aaha-eyes-wrapper" style="display:flex; justify-content:center; margin-bottom:30px;">
+        <div class="aaha-eyes-container thinking" id="running-eyes">
+          <div class="eyebrows">
+            <div class="eyebrow left"></div>
+            <div class="eyebrow right"></div>
+          </div>
+          <div class="eyes-row">
+            <div class="aaha-eye left-eye">
+              <div class="pupil"></div>
+            </div>
+            <div class="aaha-eye right-eye">
+              <div class="pupil"></div>
+            </div>
+          </div>
+          <div class="mouth"></div>
+        </div>
+      </div>
+      
+      <div id="running-test-icon" style="font-size:64px; margin-bottom:20px;">❤️</div>
+      <h2 id="running-test-name" style="font-size:28px; font-weight:800; margin-bottom:16px; color:var(--ink);">Testing Blood Pressure...</h2>
+      
+      <div id="running-message" style="font-size:18px; color:var(--muted); margin-bottom:30px;">
+        Please remain still and relaxed
+      </div>
+      
+      <!-- Progress bar -->
+      <div style="width:100%; height:8px; border-radius:8px; background:rgba(15,23,42,0.1); overflow:hidden; margin-bottom:12px;">
+        <div id="test-progress-fill" style="height:100%; width:0%; background:linear-gradient(90deg,var(--secondary),var(--primary)); border-radius:8px; transition:width 0.5s ease;"></div>
+      </div>
+      <div id="test-progress-text" style="font-size:14px; color:var(--muted); font-weight:600;">0%</div>
+    </div>
+  </section>
+
+  <!-- NEW: SCREEN 6C - MINI TEST RESULT -->
+  <section class="screen" id="screen-test-result">
+    <div class="test-result-panel glass-card" style="width:600px; padding:50px; text-align:center;">
+      <div id="result-status-icon" style="font-size:80px; margin-bottom:20px;">✅</div>
+      <h2 id="result-test-name" style="font-size:28px; font-weight:800; margin-bottom:20px; color:var(--ink);">Blood Pressure Result</h2>
+      
+      <div id="result-value" style="font-size:56px; font-weight:900; margin-bottom:16px; color:var(--primary);">
+        124/82
+      </div>
+      <div id="result-unit" style="font-size:18px; color:var(--muted); margin-bottom:24px;">mmHg</div>
+      
+      <div id="result-status" class="result-badge" style="display:inline-block; padding:12px 24px; border-radius:12px; font-size:16px; font-weight:700; margin-bottom:24px;">
+        ⚠️ SLIGHTLY ELEVATED
+      </div>
+      
+      <div id="result-note" style="font-size:16px; color:var(--muted); margin-bottom:30px; line-height:1.6; padding:20px; background:rgba(37,99,235,0.05); border-radius:12px;">
+        Your blood pressure is slightly high. Monitor it regularly.
+      </div>
+      
+      <button class="btn btn-primary" id="btn-next-test" style="width:100%;">Continue to Next Test →</button>
+    </div>
+  </section>
+
+  <!-- NEW: SCREEN 6D - TEST ERROR HANDLING -->
+  <section class="screen" id="screen-test-error">
+    <div class="test-error-panel glass-card" style="width:600px; padding:50px; text-align:center;">
+      <!-- AAHA Cartoon Face (centered, concerned) -->
+      <div class="aaha-eyes-wrapper" style="display:flex; justify-content:center; margin-bottom:30px;">
+        <div class="aaha-eyes-container" id="error-eyes">
+          <div class="eyebrows">
+            <div class="eyebrow left"></div>
+            <div class="eyebrow right"></div>
+          </div>
+          <div class="eyes-row">
+            <div class="aaha-eye left-eye">
+              <div class="pupil"></div>
+            </div>
+            <div class="aaha-eye right-eye">
+              <div class="pupil"></div>
+            </div>
+          </div>
+          <div class="mouth"></div>
+        </div>
+      </div>
+      
+      <div style="font-size:64px; margin-bottom:20px;">⚠️</div>
+      <h2 style="font-size:28px; font-weight:800; margin-bottom:16px; color:var(--danger);">Test Issue</h2>
+      
+      <div id="error-message" style="font-size:18px; color:var(--muted); margin-bottom:30px; line-height:1.6;">
+        The device is not responding properly.
+      </div>
+      
+      <div style="font-size:16px; font-weight:600; color:var(--ink); margin-bottom:24px;">
+        What would you like to do?
+      </div>
+      
+      <div style="display:flex; flex-direction:column; gap:12px;">
+        <button class="btn btn-primary" id="btn-retry-test">🔄 Retry Now</button>
+        <button class="btn btn-ghost" id="btn-skip-error-test">⏭ Skip This Test</button>
+        <button class="btn btn-ghost" id="btn-reschedule-visit">📅 Reschedule Visit</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- NEW: SCREEN 6E - RESCHEDULE PICKER -->
+  <section class="screen" id="screen-reschedule">
+    <div class="reschedule-panel glass-card" style="width:600px; padding:50px;">
+      <h2 style="font-size:28px; font-weight:800; margin-bottom:24px; color:var(--ink); text-align:center;">📅 Reschedule Your Visit</h2>
+      
+      <div style="margin-bottom:24px;">
+        <label style="font-size:14px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.6px; display:block; margin-bottom:8px;">Select Date:</label>
+        <input type="date" id="reschedule-date" style="width:100%; padding:16px; border-radius:12px; border:1px solid var(--glass-border); background:rgba(15,23,42,0.045); color:var(--ink); font-size:16px; font-weight:600; font-family:inherit;">
+      </div>
+      
+      <div style="margin-bottom:30px;">
+        <label style="font-size:14px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.6px; display:block; margin-bottom:12px;">Select Time Slot:</label>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+          <div class="time-slot" data-slot="9-11">
+            <input type="radio" name="timeslot" value="9-11" id="slot1" style="display:none;">
+            <label for="slot1" class="time-slot-label">9:00 AM - 11:00 AM</label>
+          </div>
+          <div class="time-slot" data-slot="11-13">
+            <input type="radio" name="timeslot" value="11-13" id="slot2" style="display:none;">
+            <label for="slot2" class="time-slot-label">11:00 AM - 1:00 PM</label>
+          </div>
+          <div class="time-slot" data-slot="14-16">
+            <input type="radio" name="timeslot" value="14-16" id="slot3" style="display:none;">
+            <label for="slot3" class="time-slot-label">2:00 PM - 4:00 PM</label>
+          </div>
+          <div class="time-slot" data-slot="16-18">
+            <input type="radio" name="timeslot" value="16-18" id="slot4" style="display:none;">
+            <label for="slot4" class="time-slot-label">4:00 PM - 6:00 PM</label>
+          </div>
+        </div>
+      </div>
+      
+      <div style="display:flex; gap:12px;">
+        <button class="btn btn-ghost" id="btn-cancel-reschedule" style="flex:1;">Cancel</button>
+        <button class="btn btn-primary" id="btn-confirm-reschedule" style="flex:1;">Confirm Reschedule</button>
+      </div>
+    </div>
+  </section>
+
   <!-- SCREEN 6B: ECG CAPTURE (if selected) -->
   <section class="screen" id="screen-ecg">
     <div class="ecg-panel glass-card">
@@ -591,6 +1012,32 @@ canvas{width:100%; height:220px; border-radius:16px; background:rgba(0,0,0,0.35)
     <div class="farewell-title" id="end-title">Thank You, <span id="end-name">Patient</span> 🙏</div>
     <div class="farewell-sub">Your report has been sent to your WhatsApp. Take care, and stay healthy!</div>
     <div class="farewell-note">Returning to home screen shortly...</div>
+  </section>
+
+  <!-- ASHA WELCOME SCREEN -->
+  <section class="screen" id="screen-asha-welcome">
+    <div style="text-align:center;max-width:700px;">
+      <div class="orb-slot"><div class="orb-wrap" style="width:180px;height:180px;">
+        <div class="orb-face-simple"><span class="s-eye left"></span><span class="s-eye right"></span></div>
+      </div></div>
+      <div style="font-size:40px;font-weight:900;margin-top:20px;color:var(--primary);">👩‍⚕️ Welcome, ASHA Worker!</div>
+      <div style="font-size:20px;font-weight:600;color:var(--ink);margin-top:16px;line-height:1.6;">
+        Namaste! Aapka login safal raha.
+      </div>
+      <div style="font-size:18px;font-weight:500;color:var(--muted);margin-top:12px;line-height:1.8;">
+        🤖 Main AAHA AI Assistant hoon.<br>
+        Main patient screening, vital signs collection aur health reports<br>
+        banane mein aapki madad karunga.
+      </div>
+      <div style="display:flex;gap:20px;margin-top:40px;justify-content:center;">
+        <button class="btn btn-primary" id="btn-asha-start-screening" style="font-size:18px;padding:20px 40px;">
+          ➕ Start New Screening
+        </button>
+        <button class="btn btn-ghost" id="btn-asha-view-records" style="font-size:18px;padding:20px 40px;">
+          📋 View Previous Records
+        </button>
+      </div>
+    </div>
   </section>
 
   <!-- ASHA DASHBOARD -->
@@ -925,7 +1372,7 @@ function verifyOtp(){
   setTimeout(()=>{
     $('#btn-verify').textContent='Verify';
     if(state.role==='asha'){
-      goTo('screen-asha-dashboard');
+      goTo('screen-asha-welcome');
       return;
     }
     // Patient path: load prior history first (Section 8) so returning
@@ -994,6 +1441,38 @@ function runRegSuccess(){
 /* ============================= SCREEN 7: CHAT (live Claude call) ============================= */
 function addBubble(role, text){
   const scroll = $('#chat-scroll');
+  
+  // Add AAHA eyes BEFORE AI message (in the middle of conversation)
+  if(role === 'ai' && state.chatHistory.length > 1){
+    const aahaAvatar = document.createElement('div');
+    aahaAvatar.className = 'chat-aaha-avatar';
+    aahaAvatar.innerHTML = `
+      <div class="aaha-eyes-container">
+        <div class="eyebrows">
+          <div class="eyebrow left"></div>
+          <div class="eyebrow right"></div>
+        </div>
+        <div class="eyes-row">
+          <div class="aaha-eye left-eye">
+            <div class="pupil"></div>
+          </div>
+          <div class="aaha-eye right-eye">
+            <div class="pupil"></div>
+          </div>
+        </div>
+        <div class="mouth"></div>
+      </div>
+      <div class="chat-aaha-status">AAHA is thinking...</div>
+    `;
+    scroll.appendChild(aahaAvatar);
+    
+    // Update status after a moment
+    setTimeout(() => {
+      const status = aahaAvatar.querySelector('.chat-aaha-status');
+      if(status) status.textContent = 'AAHA';
+    }, 800);
+  }
+  
   const b = document.createElement('div');
   b.className = 'bubble '+(role==='user'?'user':'ai');
   b.textContent = text;
@@ -1156,6 +1635,29 @@ async function callGemini(history){
 let chatTurns = 0;
 async function sendChat(text){
   if(!text || !text.trim()) return;
+  
+  // If workflow active, handle response
+  if(workflowEngine.active && workflowEngine.awaitingResponse){
+    addBubble('user', text);
+    state.chatHistory.push({role:'user', content:text});
+    $('#chat-input').value='';
+    workflowEngine.awaitingResponse = false;
+    
+    // Check if consent phase
+    if(workflowEngine.currentPhase && workflowEngine.currentPhase.type === 'consent'){
+      if(text.toLowerCase().includes('yes') || text.toLowerCase().includes('haan') || text.toLowerCase().includes('ok')){
+        // User consented - move to next phase
+        workflowEngine.moveToNextPhase();
+      } else {
+        // User declined
+        addBubble('ai', "That's okay. Come back anytime you're ready.");
+        speak("Koi baat nahi. Jab aap ready hain tab wapas aaiye.");
+        workflowEngine.active = false;
+      }
+    }
+    return;
+  }
+  
   addBubble('user', text);
   state.chatHistory.push({role:'user', content:text});
   $('#chat-input').value='';
@@ -1169,15 +1671,25 @@ async function sendChat(text){
   speak(reply);
   chatTurns++;
   
-  // Analyze conversation for automatic test recommendations
+  // Analyze conversation for automatic workflow detection
   const conversationText = state.chatHistory.map(m => m.content).join(' ').toLowerCase();
   
-  // Smart detection: Check if AI mentioned vitals or we have enough info
+  // PCOS workflow trigger
+  if(/period|menstrual|cycle|pcos|irregular.*period|missed.*period|late.*period/i.test(conversationText) && 
+     chatTurns >= 2 && 
+     !workflowEngine.active){
+    speak("Based on what you've shared, let me ask you some specific questions. One moment...");
+    await sleep(2000);
+    await workflowEngine.start('pcos');
+    return;
+  }
+  
+  // Analyze conversation for automatic test recommendations
   const shouldProceedToTests = 
     /vitals|check|test|recommend|devices|medical|bp|ecg|glucose|hemoglobin/i.test(reply) || 
     chatTurns >= 4;
   
-  if(shouldProceedToTests){
+  if(shouldProceedToTests && !workflowEngine.active){
     // AUTOMATIC TEST SELECTION based on symptoms mentioned
     state.selectedTests = []; // Clear previous selection
     
@@ -1401,13 +1913,85 @@ function initChatScreen(){
 
 /* ============================= SCREEN 6: RECOMMENDED TESTS ============================= */
 const DEVICES = [
-  {id:'ecg', icon:'❤️', name:'ECG', machine:'ECG Monitor', cost:50},
-  {id:'bp', icon:'🩸', name:'Blood Pressure', machine:'BP Monitor', cost:20},
-  {id:'spo2', icon:'🫁', name:'Oxygen Saturation', machine:'Pulse Oximeter', cost:20},
-  {id:'glucose', icon:'💉', name:'Blood Glucose', machine:'Glucometer', cost:40},
-  {id:'hb', icon:'🧪', name:'Hemoglobin', machine:'Hemoglobin Analyzer', cost:60},
-  {id:'steth', icon:'🩺', name:'Chest Sounds', machine:'Digital Stethoscope', cost:30},
+  {
+    id:'ecg', 
+    icon:'❤️', 
+    name:'ECG', 
+    machine:'ECG Monitor', 
+    cost:50,
+    duration: 45,
+    consent: "May I perform an ECG test? Please attach the electrodes to your chest.",
+    explanation: "ECG records your heart's electrical activity to detect rhythm issues. This will take about 45 seconds.",
+    normalRange: "Normal Sinus Rhythm",
+    unit: "BPM"
+  },
+  {
+    id:'bp', 
+    icon:'🩸', 
+    name:'Blood Pressure', 
+    machine:'BP Monitor', 
+    cost:20,
+    duration: 30,
+    consent: "May I check your Blood Pressure? Please place your arm in the cuff.",
+    explanation: "Blood pressure measures the force of blood against artery walls. Normal is 120/80 mmHg.",
+    normalRange: "90/60 to 120/80",
+    unit: "mmHg"
+  },
+  {
+    id:'spo2', 
+    icon:'🫁', 
+    name:'Oxygen Saturation', 
+    machine:'Pulse Oximeter', 
+    cost:20,
+    duration: 15,
+    consent: "May I check your Blood Oxygen level? Please place your finger in the sensor.",
+    explanation: "SpO2 shows how much oxygen your blood is carrying. Normal is 95-100%.",
+    normalRange: "95-100%",
+    unit: "%"
+  },
+  {
+    id:'glucose', 
+    icon:'💉', 
+    name:'Blood Glucose', 
+    machine:'Glucometer', 
+    cost:40,
+    duration: 20,
+    consent: "May I check your Blood Sugar? A small finger prick will be needed.",
+    explanation: "Blood sugar test checks glucose levels. Normal fasting is 70-100 mg/dL.",
+    normalRange: "70-100 mg/dL (fasting)",
+    unit: "mg/dL"
+  },
+  {
+    id:'hb', 
+    icon:'🧪', 
+    name:'Hemoglobin', 
+    machine:'Hemoglobin Analyzer', 
+    cost:60,
+    duration: 60,
+    consent: "May I check your Hemoglobin? A small blood sample will be needed.",
+    explanation: "Hemoglobin measures your blood's oxygen-carrying capacity. Normal range varies by gender.",
+    normalRange: "12-16 g/dL (women), 14-18 g/dL (men)",
+    unit: "g/dL"
+  },
+  {
+    id:'steth', 
+    icon:'🩺', 
+    name:'Chest Sounds', 
+    machine:'Digital Stethoscope', 
+    cost:30,
+    duration: 40,
+    consent: "May I listen to your chest sounds? Please breathe normally.",
+    explanation: "Digital stethoscope checks for abnormal lung or heart sounds.",
+    normalRange: "Clear sounds, no abnormalities",
+    unit: ""
+  },
 ];
+
+// Enhanced state to track individual test results
+state.testResults = {};
+state.currentTestIndex = 0;
+state.testQueue = [];
+
 let testsTimeoutTimer=null, testsCountdownInterval=null;
 
 function buildDeviceGrid(){
@@ -1463,9 +2047,372 @@ $('#btn-cancel-tests').addEventListener('click', ()=>{
 $('#btn-start-tests').addEventListener('click', ()=>{
   if(state.selectedTests.length===0) return;
   clearTimeout(testsTimeoutTimer); clearInterval(testsCountdownInterval);
-  state.selectedTests.forEach(id=> state.devicesConnected[id]=true);
-  if(state.selectedTests.includes('ecg')) goTo('screen-ecg');
-  else goTo('screen-processing');
+  
+  // NEW: Initialize test queue and results
+  state.testQueue = state.selectedTests.map(id => DEVICES.find(d => d.id === id));
+  state.currentTestIndex = 0;
+  state.testResults = {};
+  
+  // Start individual test flow
+  startNextTest();
+});
+
+/* ============================= NEW: INDIVIDUAL TEST FLOW ============================= */
+
+// Start the next test in queue
+function startNextTest(){
+  if(state.currentTestIndex >= state.testQueue.length){
+    // All tests complete - go to final report
+    goTo('screen-processing');
+    return;
+  }
+  
+  const test = state.testQueue[state.currentTestIndex];
+  showTestConsent(test);
+}
+
+// Show consent screen for a test
+function showTestConsent(test){
+  // Center AAHA avatar for consent
+  centerAAHAAvatar();
+  
+  $('#consent-test-icon').textContent = test.icon;
+  $('#consent-test-name').textContent = test.name + ' Test';
+  
+  // Use improved guidance messages
+  const guidance = TEST_GUIDANCE[test.id] || {};
+  const consentMsg = guidance.before || test.workflowConsent || test.consent;
+  $('#consent-message').textContent = consentMsg;
+  
+  $('#consent-explanation').textContent = test.explanation + ` Duration: ~${test.duration} seconds. Normal range: ${test.normalRange}`;
+  
+  // Speak consent
+  speak(consentMsg);
+  
+  goTo('screen-test-consent');
+}
+
+// Consent button handlers
+$('#btn-consent-yes').addEventListener('click', ()=>{
+  // Reset avatar after consent accepted
+  setTimeout(() => resetAAHAAvatar(), 800);
+  
+  const test = state.testQueue[state.currentTestIndex];
+  runTest(test);
+});
+
+$('#btn-skip-test').addEventListener('click', ()=>{
+  // Reset avatar
+  resetAAHAAvatar();
+  
+  const test = state.testQueue[state.currentTestIndex];
+  state.testResults[test.id] = {
+    status: 'skipped',
+    value: null,
+    note: 'Test skipped by user'
+  };
+  state.currentTestIndex++;
+  speak('Test skipped. Moving to next test.');
+  setTimeout(() => startNextTest(), 1000);
+});
+
+// Run the actual test
+function runTest(test){
+  // Keep avatar centered during test
+  centerAAHAAvatar();
+  
+  // Use improved guidance messages
+  const guidance = TEST_GUIDANCE[test.id] || {};
+  const duringMsg = guidance.during || getTestInstructions(test.id);
+  
+  $('#running-test-icon').textContent = test.icon;
+  $('#running-test-name').textContent = `Testing ${test.name}...`;
+  $('#running-message').textContent = duringMsg;
+  $('#test-progress-fill').style.width = '0%';
+  $('#test-progress-text').textContent = '0%';
+  
+  speak(duringMsg);
+  goTo('screen-test-running');
+  
+  // Simulate test progress
+  let progress = 0;
+  const duration = test.duration * 1000; // convert to ms
+  const updateInterval = 100; // update every 100ms
+  const incrementPer100ms = (100 / (duration / updateInterval));
+  
+  const progressInterval = setInterval(()=>{
+    progress += incrementPer100ms;
+    if(progress >= 100) progress = 100;
+    
+    $('#test-progress-fill').style.width = progress + '%';
+    $('#test-progress-text').textContent = Math.round(progress) + '%';
+    
+    if(progress >= 100){
+      clearInterval(progressInterval);
+      
+      // Simulate random device error (5% chance)
+      if(Math.random() < 0.05){
+        showTestError(test, 'device');
+      } else {
+        // Test successful - generate result
+        const result = generateTestResult(test);
+        showTestResult(test, result);
+      }
+    }
+  }, updateInterval);
+}
+
+// Get test-specific instructions
+function getTestInstructions(testId){
+  const instructions = {
+    bp: 'Please remain still and keep your arm relaxed',
+    spo2: 'Keep your finger steady in the sensor',
+    ecg: 'Please lie still and breathe normally',
+    glucose: 'Please hold still while we collect the sample',
+    hb: 'Sample collection in progress',
+    steth: 'Please breathe deeply when instructed'
+  };
+  return instructions[testId] || 'Please remain calm and follow instructions';
+}
+
+// Generate realistic test result
+function generateTestResult(test){
+  let value, status, note, statusClass;
+  
+  switch(test.id){
+    case 'bp':
+      const sys = 110 + Math.floor(Math.random() * 30); // 110-140
+      const dia = 70 + Math.floor(Math.random() * 20); // 70-90
+      value = `${sys}/${dia}`;
+      if(sys <= 120 && dia <= 80){
+        status = '✓ NORMAL RANGE';
+        statusClass = 'normal';
+        note = 'Your blood pressure is in healthy range. Great!';
+      } else if(sys <= 140 && dia <= 90){
+        status = '⚠️ SLIGHTLY ELEVATED';
+        statusClass = 'monitor';
+        note = 'Your blood pressure is slightly high. Monitor it regularly and reduce salt intake.';
+      } else {
+        status = '🚨 HIGH - CONSULT DOCTOR';
+        statusClass = 'alert';
+        note = 'Your blood pressure is high. Please consult a doctor soon.';
+      }
+      break;
+      
+    case 'spo2':
+      value = 94 + Math.floor(Math.random() * 6); // 94-99
+      if(value >= 95){
+        status = '✓ NORMAL RANGE';
+        statusClass = 'normal';
+        note = 'Your oxygen saturation is excellent!';
+      } else {
+        status = '⚠️ SLIGHTLY LOW';
+        statusClass = 'monitor';
+        note = 'Your oxygen level is slightly low. Monitor breathing.';
+      }
+      break;
+      
+    case 'glucose':
+      value = 80 + Math.floor(Math.random() * 50); // 80-130
+      if(value <= 100){
+        status = '✓ NORMAL RANGE';
+        statusClass = 'normal';
+        note = 'Your blood sugar is in healthy range!';
+      } else if(value <= 125){
+        status = '⚠️ SLIGHTLY HIGH';
+        statusClass = 'monitor';
+        note = 'Your blood sugar is slightly elevated. Reduce sugar intake.';
+      } else {
+        status = '🚨 HIGH - CONSULT DOCTOR';
+        statusClass = 'alert';
+        note = 'Your blood sugar is high. Please consult a doctor.';
+      }
+      break;
+      
+    case 'hb':
+      const isWoman = state.patient.gender === 'Female';
+      value = isWoman ? (10 + Math.random() * 5) : (12 + Math.random() * 5); // Women: 10-15, Men: 12-17
+      value = value.toFixed(1);
+      const minNormal = isWoman ? 12 : 14;
+      if(parseFloat(value) >= minNormal){
+        status = '✓ NORMAL RANGE';
+        statusClass = 'normal';
+        note = 'Your hemoglobin is in healthy range!';
+      } else {
+        status = '🚨 LOW - ANEMIA RISK';
+        statusClass = 'alert';
+        note = 'Your hemoglobin is low. Increase iron-rich foods and consult doctor.';
+      }
+      break;
+      
+    case 'ecg':
+      const hr = 70 + Math.floor(Math.random() * 20); // 70-90
+      value = hr;
+      status = '✓ NORMAL SINUS RHYTHM';
+      statusClass = 'normal';
+      note = `Heart rhythm is normal. Heart rate: ${hr} BPM.`;
+      break;
+      
+    case 'steth':
+      value = 'Clear';
+      status = '✓ NO ABNORMALITIES';
+      statusClass = 'normal';
+      note = 'Chest sounds are clear. No wheezing or crackles detected.';
+      break;
+      
+    default:
+      value = 'Normal';
+      status = '✓ NORMAL';
+      statusClass = 'normal';
+      note = 'Test completed successfully.';
+  }
+  
+  return {value, status, note, statusClass, unit: test.unit};
+}
+
+// Show test result
+function showTestResult(test, result){
+  centerAAHAAvatar(); // Center AAHA for result display
+  
+  // Save result
+  state.testResults[test.id] = {
+    status: 'completed',
+    value: result.value,
+    statusText: result.status,
+    note: result.note,
+    statusClass: result.statusClass
+  };
+  
+  // Update state.vitals for final report compatibility
+  if(test.id === 'bp') state.vitals.bp = result.value;
+  if(test.id === 'spo2') state.vitals.spo2 = result.value;
+  if(test.id === 'ecg') state.vitals.hr = result.value;
+  if(test.id === 'glucose') state.vitals.glucose = result.value;
+  if(test.id === 'hb') state.vitals.hb = result.value;
+  
+  // Get enhanced conversational explanation
+  const explanations = MINI_RESULT_EXPLANATIONS[test.id] || {};
+  const explanation = explanations[result.statusClass] || result.note;
+  
+  // Update UI
+  const iconMap = {
+    normal: '✅',
+    monitor: '⚠️',
+    alert: '🚨'
+  };
+  
+  $('#result-status-icon').textContent = iconMap[result.statusClass];
+  $('#result-test-name').textContent = test.name + ' Result';
+  $('#result-value').textContent = result.value;
+  $('#result-unit').textContent = result.unit;
+  $('#result-status').textContent = result.status;
+  $('#result-status').className = 'result-badge ' + result.statusClass;
+  $('#result-note').textContent = explanation;
+  
+  // Speak result with empathetic tone
+  speak(explanation);
+  
+  goTo('screen-test-result');
+  
+  // Reset avatar after 3 seconds
+  setTimeout(() => resetAAHAAvatar(), 3000);
+}
+
+// Next test button
+$('#btn-next-test').addEventListener('click', ()=>{
+  state.currentTestIndex++;
+  startNextTest();
+});
+
+// Show test error
+function showTestError(test, errorType){
+  centerAAHAAvatar(); // Center AAHA during error
+  
+  let message;
+  if(errorType === 'device'){
+    message = `We couldn't complete this measurement because the device wasn't able to capture a reliable reading. This can occasionally happen due to temporary device positioning or connectivity. Would you like to try again now or schedule this test for another time?`;
+  } else if(errorType === 'cloud'){
+    message = `We're temporarily unable to complete this step because our processing service is unavailable. Your information is completely safe. No data has been lost. Would you like to try again now or schedule this test for another time?`;
+  } else {
+    message = `We encountered a temporary issue with this test. Your data is safe. Would you like to try again or reschedule?`;
+  }
+  
+  $('#error-message').textContent = message;
+  speak(message);
+  
+  goTo('screen-test-error');
+  
+  // Reset avatar after 5 seconds
+  setTimeout(() => resetAAHAAvatar(), 5000);
+}
+
+// Error handling buttons
+let retryCount = 0;
+$('#btn-retry-test').addEventListener('click', ()=>{
+  retryCount++;
+  if(retryCount >= 2){
+    speak('Maximum retries reached. Please skip or reschedule.');
+    return;
+  }
+  const test = state.testQueue[state.currentTestIndex];
+  speak('Retrying test.');
+  runTest(test);
+});
+
+$('#btn-skip-error-test').addEventListener('click', ()=>{
+  const test = state.testQueue[state.currentTestIndex];
+  state.testResults[test.id] = {
+    status: 'error',
+    value: null,
+    note: 'Test failed due to device error'
+  };
+  retryCount = 0;
+  state.currentTestIndex++;
+  speak('Test skipped due to error. Moving to next test.');
+  setTimeout(() => startNextTest(), 1000);
+});
+
+$('#btn-reschedule-visit').addEventListener('click', ()=>{
+  // Set minimum date to tomorrow
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  $('#reschedule-date').min = tomorrow.toISOString().split('T')[0];
+  
+  goTo('screen-reschedule');
+});
+
+// Reschedule handlers
+$('#btn-cancel-reschedule').addEventListener('click', ()=>{
+  goTo('screen-test-error');
+});
+
+$('#btn-confirm-reschedule').addEventListener('click', ()=>{
+  const date = $('#reschedule-date').value;
+  const timeslot = document.querySelector('input[name="timeslot"]:checked')?.value;
+  
+  if(!date || !timeslot){
+    speak('Please select both date and time slot.');
+    return;
+  }
+  
+  centerAAHAAvatar(); // Center AAHA for confirmation
+  
+  // Save reschedule info
+  state.reschedule = {date, timeslot, phone: state.phone};
+  
+  // Send WhatsApp notification (simulated)
+  const msg = `🏥 AAHA Kiosk Appointment Rescheduled\n\nPatient: ${state.patient.name}\nPhone: ${state.phone}\nDate: ${date}\nTime: ${timeslot}\n\nPlease arrive 10 minutes early.`;
+  
+  const confirmMsg = `Thank you. Your test has been scheduled successfully. We'll continue with the remaining assessment.`;
+  
+  speak(confirmMsg);
+  
+  // Continue with remaining tests after brief confirmation
+  setTimeout(() => {
+    resetAAHAAvatar();
+    state.currentTestIndex++;
+    startNextTest(); // Continue assessment
+  }, 3000);
 });
 
 /* ============================= SCREEN 9: ECG ============================= */
@@ -1527,37 +2474,123 @@ function runProcessing(){
 }
 
 /* ============================= SCREEN 11: DIAGNOSIS ============================= */
+
+// Get individual vital status with icon and text
+function getVitalStatus(type, value){
+  if(type === 'hr'){
+    if(value >= 60 && value <= 100) return '✓ Normal Range';
+    else if(value >= 50 && value <= 110) return '⚠️ Monitor';
+    else return '🚨 Consult Doctor';
+  }
+  else if(type === 'spo2'){
+    if(value >= 95) return '✓ Normal Range';
+    else if(value >= 90) return '⚠️ Monitor';
+    else return '🚨 Consult Doctor';
+  }
+  else if(type === 'temp'){
+    if(value >= 97 && value <= 99) return '✓ Normal Range';
+    else if(value >= 96 && value <= 100.5) return '⚠️ Monitor';
+    else return '🚨 Consult Doctor';
+  }
+  else if(type === 'bp'){
+    const [sys, dia] = value.split('/').map(Number);
+    if(sys >= 90 && sys <= 120 && dia >= 60 && dia <= 80) return '✓ Normal Range';
+    else if(sys >= 80 && sys <= 140 && dia >= 50 && dia <= 90) return '⚠️ Monitor';
+    else return '🚨 Consult Doctor';
+  }
+  return '✓ Recorded';
+}
+
+// Calculate Overall Wellness Score based on vitals
+function calculateWellnessScore(){
+  let score = 0;
+  const vitals = state.vitals;
+  
+  // Heart Rate (25 points) - Normal: 60-100
+  if(vitals.hr >= 60 && vitals.hr <= 100) score += 25;
+  else if(vitals.hr >= 50 && vitals.hr <= 110) score += 15;
+  else score += 5;
+  
+  // SpO2 (25 points) - Normal: 95-100
+  if(vitals.spo2 >= 95) score += 25;
+  else if(vitals.spo2 >= 90) score += 15;
+  else score += 5;
+  
+  // Blood Pressure (25 points) - Normal: 90/60 to 120/80
+  if(vitals.bp){
+    const [sys, dia] = vitals.bp.split('/').map(Number);
+    if(sys >= 90 && sys <= 120 && dia >= 60 && dia <= 80) score += 25;
+    else if(sys >= 80 && sys <= 140 && dia >= 50 && dia <= 90) score += 15;
+    else score += 5;
+  } else {
+    score += 20; // Assume normal if not measured
+  }
+  
+  // Temperature (25 points) - Normal: 97-99°F
+  const temp = vitals.temp || 98.6;
+  if(temp >= 97 && temp <= 99) score += 25;
+  else if(temp >= 96 && temp <= 100.5) score += 15;
+  else score += 5;
+  
+  return score;
+}
+
 function buildReport(){
   const p = state.patient;
   const panel = $('#report-panel');
+  
+  // Calculate Overall Wellness Score (0-100)
+  const wellnessScore = calculateWellnessScore();
+  const scoreColor = wellnessScore >= 80 ? '#10B981' : wellnessScore >= 60 ? '#F59E0B' : '#EF4444';
+  const scoreStatus = wellnessScore >= 80 ? 'Excellent Health' : wellnessScore >= 60 ? 'Needs Attention' : 'Doctor Visit Required';
+  const scoreIcon = wellnessScore >= 80 ? '✅' : wellnessScore >= 60 ? '⚠️' : '🚨';
   
   // Enhanced AI confidence with better range
   const confidence = 85 + Math.floor(Math.random()*12); // 85-96%
   const flagged = confidence < 90;
   
-  // Smart condition detection based on symptoms
+  // Check if workflow-based assessment
+  const hasWorkflow = state.workflowType && state.workflowScore !== undefined;
+  
+  // Smart condition detection based on symptoms OR workflow
   const conversationText = state.chatHistory.map(m => m.content).join(' ').toLowerCase();
   let condition = 'General Health Checkup';
   let riskLevel = 'Low Risk';
   let riskClass = 'risk-low';
   
-  // Intelligent condition detection
-  if(/fever|bukhar|temperature/i.test(conversationText)){
-    condition = 'Common Viral Fever (Suspected)';
-    riskLevel = 'Low to Moderate Risk';
-  } else if(/chest|heart|pain.*chest/i.test(conversationText)){
-    condition = 'Requires Cardiac Evaluation';
-    riskLevel = 'Moderate Risk';
-    riskClass = 'risk-badge' + ' ' + 'risk-moderate';
-  } else if(/diabetes|sugar|glucose/i.test(conversationText)){
-    condition = 'Blood Glucose Monitoring Required';
-    riskLevel = 'Moderate Risk';
-  } else if(/pressure|bp|high.*pressure/i.test(conversationText)){
-    condition = 'Blood Pressure Management Needed';
-    riskLevel = 'Moderate Risk';
-  } else if(/weak|fatigue|tired/i.test(conversationText)){
-    condition = 'General Weakness & Fatigue';
-    riskLevel = 'Low Risk';
+  if(hasWorkflow){
+    // Use workflow assessment
+    if(state.workflowType === 'pcos'){
+      condition = 'PCOS Risk Assessment';
+      if(state.workflowRisk === 'high'){
+        riskLevel = 'High Risk - Doctor Consultation Recommended';
+        riskClass = 'risk-high';
+      } else if(state.workflowRisk === 'moderate'){
+        riskLevel = 'Moderate Risk - Monitoring Required';
+        riskClass = 'risk-moderate';
+      } else {
+        riskLevel = 'Low Risk';
+      }
+    }
+  } else {
+    // Intelligent condition detection from conversation
+    if(/fever|bukhar|temperature/i.test(conversationText)){
+      condition = 'Common Viral Fever (Suspected)';
+      riskLevel = 'Low to Moderate Risk';
+    } else if(/chest|heart|pain.*chest/i.test(conversationText)){
+      condition = 'Requires Cardiac Evaluation';
+      riskLevel = 'Moderate Risk';
+      riskClass = 'risk-moderate';
+    } else if(/diabetes|sugar|glucose/i.test(conversationText)){
+      condition = 'Blood Glucose Monitoring Required';
+      riskLevel = 'Moderate Risk';
+    } else if(/pressure|bp|high.*pressure/i.test(conversationText)){
+      condition = 'Blood Pressure Management Needed';
+      riskLevel = 'Moderate Risk';
+    } else if(/weak|fatigue|tired/i.test(conversationText)){
+      condition = 'General Weakness & Fatigue';
+      riskLevel = 'Low Risk';
+    }
   }
   
   // Calculate additional metrics
@@ -1591,25 +2624,135 @@ function buildReport(){
       </div>
     </div>
     
+    <div class="section-h">🎯 Overall Wellness Score</div>
+    <div style="background:${scoreColor}15; padding:20px; border-radius:14px; border:3px solid ${scoreColor}; margin-bottom:20px;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div style="flex:1;">
+          <div style="font-size:48px; font-weight:900; color:${scoreColor}; line-height:1;">
+            ${wellnessScore}/100
+          </div>
+          <div style="font-size:16px; font-weight:700; color:${scoreColor}; margin-top:8px;">
+            ${scoreIcon} ${scoreStatus}
+          </div>
+          <div style="font-size:12px; color:#64748B; margin-top:6px; font-weight:600;">
+            ${wellnessScore >= 80 ? 'Your vitals are in excellent range. Keep maintaining your health!' : 
+              wellnessScore >= 60 ? 'Some vitals need attention. Follow doctor recommendations.' : 
+              'Please consult a doctor soon for proper evaluation.'}
+          </div>
+        </div>
+        <div style="width:80px; height:80px; border-radius:50%; background:${scoreColor}20; display:flex; align-items:center; justify-content:center; font-size:40px;">
+          ${scoreIcon}
+        </div>
+      </div>
+      <div style="margin-top:16px; font-size:11px; color:#64748B; font-weight:600;">
+        Score based on: Heart Rate, SpO2, Blood Pressure, and Temperature
+      </div>
+    </div>
+    
     <div class="section-h">📊 Vital Signs</div>
     <div class="report-row" style="margin-bottom:20px;">
       <div class="stat-box">
         <div class="val" style="color:var(--danger);">${state.vitals.hr}</div>
         <div class="lbl">Heart Rate (BPM)</div>
+        <div style="font-size:11px; color:#64748B; font-weight:600; margin-top:4px;">
+          ${getVitalStatus('hr', state.vitals.hr)}
+        </div>
       </div>
       <div class="stat-box">
         <div class="val" style="color:var(--primary);">${state.vitals.spo2}%</div>
         <div class="lbl">SpO2 (Oxygen)</div>
+        <div style="font-size:11px; color:#64748B; font-weight:600; margin-top:4px;">
+          ${getVitalStatus('spo2', state.vitals.spo2)}
+        </div>
       </div>
       <div class="stat-box">
         <div class="val" style="color:var(--secondary);">${state.vitals.temp || '98.6'}°F</div>
         <div class="lbl">Temperature</div>
+        <div style="font-size:11px; color:#64748B; font-weight:600; margin-top:4px;">
+          ${getVitalStatus('temp', state.vitals.temp || 98.6)}
+        </div>
       </div>
       ${state.vitals.bp ? `<div class="stat-box">
         <div class="val" style="color:var(--warning);">${state.vitals.bp}</div>
         <div class="lbl">Blood Pressure</div>
+        <div style="font-size:11px; color:#64748B; font-weight:600; margin-top:4px;">
+          ${getVitalStatus('bp', state.vitals.bp)}
+        </div>
       </div>` : ''}
     </div>
+    
+    ${Object.keys(state.testResults || {}).length > 0 ? `
+    <div class="section-h">📋 All Test Results Summary</div>
+    <div style="background:#F8FAFC; padding:20px; border-radius:14px; margin-bottom:20px;">
+      <div style="display:flex; flex-direction:column; gap:12px;">
+        ${Object.entries(state.testResults).map(([testId, result]) => {
+          const testInfo = DEVICES.find(d => d.id === testId);
+          if(!testInfo) return '';
+          
+          const iconMap = {completed: '✅', skipped: '⏭', error: '⚠️'};
+          const colorMap = {normal: '#10B981', monitor: '#F59E0B', alert: '#EF4444'};
+          const bgColorMap = {normal: '#E7F8F0', monitor: '#FEF3C7', alert: '#FEE2E2'};
+          
+          if(result.status === 'skipped'){
+            return `
+              <div style="display:flex; align-items:center; justify-content:space-between; padding:12px; background:#F1F5F9; border-radius:10px;">
+                <div style="display:flex; align-items:center; gap:12px;">
+                  <span style="font-size:24px;">${testInfo.icon}</span>
+                  <div>
+                    <div style="font-weight:700; color:var(--ink);">${testInfo.name}</div>
+                    <div style="font-size:12px; color:var(--muted);">Test Skipped</div>
+                  </div>
+                </div>
+                <span style="font-size:20px;">⏭</span>
+              </div>
+            `;
+          }
+          
+          if(result.status === 'error'){
+            return `
+              <div style="display:flex; align-items:center; justify-content:space-between; padding:12px; background:#FEE2E2; border-radius:10px; border:1px solid #EF4444;">
+                <div style="display:flex; align-items:center; gap:12px;">
+                  <span style="font-size:24px;">${testInfo.icon}</span>
+                  <div>
+                    <div style="font-weight:700; color:var(--ink);">${testInfo.name}</div>
+                    <div style="font-size:12px; color:#B91C1C;">Device Error</div>
+                  </div>
+                </div>
+                <span style="font-size:20px;">⚠️</span>
+              </div>
+            `;
+          }
+          
+          // Completed test
+          const bgColor = bgColorMap[result.statusClass] || '#F1F5F9';
+          const textColor = colorMap[result.statusClass] || '#64748B';
+          
+          return `
+            <div style="display:flex; align-items:center; justify-content:space-between; padding:12px; background:${bgColor}; border-radius:10px;">
+              <div style="display:flex; align-items:center; gap:12px;">
+                <span style="font-size:24px;">${testInfo.icon}</span>
+                <div>
+                  <div style="font-weight:700; color:var(--ink);">${testInfo.name}</div>
+                  <div style="font-size:14px; font-weight:800; color:${textColor}; margin-top:2px;">
+                    ${result.value} ${testInfo.unit}
+                  </div>
+                  <div style="font-size:11px; color:${textColor}; margin-top:2px;">${result.statusText}</div>
+                </div>
+              </div>
+              <div style="text-align:right;">
+                <div style="font-size:24px;">${iconMap[result.status] || '✅'}</div>
+              </div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+      <div style="margin-top:14px; font-size:12px; color:var(--muted); font-weight:600; text-align:center;">
+        ${Object.values(state.testResults).filter(r => r.status === 'completed').length} tests completed • 
+        ${Object.values(state.testResults).filter(r => r.status === 'skipped').length} skipped •
+        ${Object.values(state.testResults).filter(r => r.status === 'error').length} errors
+      </div>
+    </div>
+    ` : ''}
     
     ${ecgDone ? `
     <div class="section-h">❤️ ECG Report</div>
@@ -1651,13 +2794,35 @@ function buildReport(){
     
     <div class="section-h">💊 Medical Recommendations</div>
     <ul class="rec-list">
-      <li><strong>Rest & Hydration:</strong> Drink 2–3 litres of water daily and get adequate rest</li>
-      <li><strong>Temperature Monitoring:</strong> Check temperature twice daily for next 3 days</li>
-      <li><strong>Symptom Tracking:</strong> Note any new or worsening symptoms</li>
-      <li><strong>Follow-up:</strong> Return to PHC if symptoms persist beyond 5 days or worsen</li>
-      <li><strong>Red Flags:</strong> Seek immediate care if fever exceeds 103°F, breathing difficulty, or chest pain occurs</li>
+      ${wellnessScore >= 80 ? `
+        <li><strong>Excellent Health:</strong> Your vitals are in healthy range. Continue your current lifestyle.</li>
+        <li><strong>Prevention:</strong> Maintain regular exercise, balanced diet, and adequate sleep</li>
+        <li><strong>Hydration:</strong> Drink 2–3 litres of water daily</li>
+        <li><strong>Routine Check:</strong> Schedule annual health screening for preventive care</li>
+        <li><strong>Stay Active:</strong> 30 minutes of physical activity daily recommended</li>
+      ` : wellnessScore >= 60 ? `
+        <li><strong>Attention Needed:</strong> Some vitals need monitoring. Follow recommendations carefully.</li>
+        <li><strong>Rest & Hydration:</strong> Drink 2–3 litres of water daily and get adequate rest</li>
+        <li><strong>Monitoring:</strong> Check vitals daily for next 5-7 days</li>
+        <li><strong>Lifestyle:</strong> Reduce stress, improve sleep quality, eat balanced meals</li>
+        <li><strong>Follow-up:</strong> Return to PHC in 1 week for re-assessment</li>
+        <li><strong>Warning Signs:</strong> Contact doctor immediately if condition worsens</li>
+      ` : `
+        <li><strong>⚠️ Important:</strong> Your vitals indicate doctor consultation is needed</li>
+        <li><strong>Immediate Action:</strong> Schedule appointment with doctor within 24-48 hours</li>
+        <li><strong>Monitoring:</strong> Check vitals every 4-6 hours and maintain a log</li>
+        <li><strong>Rest:</strong> Avoid strenuous activity and get complete rest</li>
+        <li><strong>Hydration:</strong> Maintain fluid intake with ORS or water</li>
+        <li><strong>Emergency:</strong> Go to hospital immediately if severe symptoms develop (breathing difficulty, chest pain, very high fever)</li>
+      `}
     </ul>
     
+    ${state.workflowDietAdvice && state.workflowDietAdvice.length > 0 ? `
+    <div class="section-h">🍽️ Personalized Diet Recommendations</div>
+    <ul class="rec-list">
+      ${state.workflowDietAdvice.map(advice => `<li>${advice}</li>`).join('')}
+    </ul>
+    ` : `
     <div class="section-h">🏡 Home Care & Remedies</div>
     <ul class="rec-list">
       <li><strong>Turmeric Milk:</strong> Warm turmeric milk before bedtime (anti-inflammatory)</li>
@@ -1665,6 +2830,7 @@ function buildReport(){
       <li><strong>Balanced Diet:</strong> Include fruits, vegetables, and protein-rich foods</li>
       <li><strong>Avoid:</strong> Cold drinks, ice cream, and strenuous physical activity</li>
     </ul>
+    `}
     
     <div class="section-h">👨‍⚕️ Doctor Consultation</div>
     <div style="background:#F0F9FF; padding:16px; border-radius:14px; border:2px solid #3B82F6; margin-bottom:20px;">
@@ -1799,13 +2965,14 @@ function resetToHome(){
 function onEnterScreen(id){
   if(id==='screen-video') playIntroVideo();
   if(id==='screen-chat') initChatScreen();
+  if(id==='screen-asha-welcome') greetAshaWelcome();
   if(id==='screen-devices') buildDeviceGrid();
   if(id==='screen-ecg') startEcg();
   if(id==='screen-processing') runProcessing();
   if(id==='screen-diagnosis') buildReport();
   if(id==='screen-reg-success') runRegSuccess();
   if(id==='screen-end') runFarewell();
-  if(id==='screen-asha-dashboard') renderAshaDashboard();
+  if(id==='screen-asha-dashboard') { renderAshaDashboard(); greetAshaWorker(); }
 }
 
 /* ============================= ASHA WORKER DASHBOARD =============================
@@ -1875,8 +3042,8 @@ function renderAshaDashboard(filterText){
 function renderAshaDetail(phone, rec){
   const detail = $('#asha-detail');
   const p = rec.profile;
-  let visitsHtml = rec.visits.map(v=>`
-    <div class="visit-card">
+  let visitsHtml = rec.visits.map((v, idx)=>`
+    <div class="visit-card" style="cursor:pointer;" onclick="showVisitDetails('${phone}', ${idx})">
       <div class="vtop"><span>${v.condition}</span>${v.flagged?'<span class="flag-badge">⚑ Review</span>':''}</div>
       <div class="vmeta">${new Date(v.timestamp).toLocaleString()} · Confidence ${v.confidence}% · HR ${v.vitals.hr} BPM · SpO2 ${v.vitals.spo2}%</div>
       <div class="vcond">${v.symptomTranscript ? '"'+v.symptomTranscript+'"' : ''}</div>
@@ -1889,8 +3056,68 @@ function renderAshaDetail(phone, rec){
     ${visitsHtml}
   `;
 }
+
+function showVisitDetails(phone, visitIndex){
+  const db = loadDB();
+  const visit = db[phone].visits[visitIndex];
+  const patient = db[phone].profile;
+  
+  alert(`📋 Visit Details
+
+Patient: ${patient.name}
+Date: ${new Date(visit.timestamp).toLocaleString()}
+Condition: ${visit.condition}
+Confidence: ${visit.confidence}%
+
+Vitals:
+❤️ Heart Rate: ${visit.vitals.hr} BPM
+🫁 SpO2: ${visit.vitals.spo2}%
+🌡️ Temperature: ${visit.vitals.temp}°F
+🩸 BP: ${visit.vitals.bp}
+
+${visit.flagged ? '⚑ FLAGGED: Confidence below 90% - Requires review' : '✓ Normal confidence level'}
+
+Symptoms: ${visit.symptomTranscript || 'Not recorded'}`);
+}
 $('#asha-search').addEventListener('input', e=> renderAshaDashboard(e.target.value));
 $('#btn-asha-logout').addEventListener('click', ()=>{ ashaSelectedPhone=null; resetToHome(); });
+
+/* ============================= ASHA WORKER VOICE GREETING ============================= */
+function greetAshaWelcome(){
+  const greeting = "Namaste ASHA ji. Aapka login safal raha. Main AAHA AI Assistant hoon. Main patient screening, vital signs collection aur health reports banane mein aapki madad karunga.";
+  speak(greeting);
+}
+
+function greetAshaWorker(){
+  const todayPatients = parseInt($('#today-patients').textContent) || 0;
+  const todayFlagged = parseInt($('#today-flagged').textContent) || 0;
+  
+  let greeting;
+  if(todayPatients === 0) {
+    greeting = "Namaste ASHA ji. Aaj ka kaam shuru karte hain. Abhi tak koi patient screening nahi hua hai.";
+  } else if(todayPatients === 1) {
+    greeting = `Namaste ASHA ji. Aaj tak ${todayPatients} patient ka screening ho chuka hai.`;
+  } else {
+    greeting = `Namaste ASHA ji. Aaj tak ${todayPatients} patients ka screening ho chuka hai.`;
+  }
+  
+  if(todayFlagged > 0) {
+    greeting += ` ${todayFlagged} case flagged hai review ke liye.`;
+  }
+  
+  speak(greeting);
+}
+
+/* ASHA Welcome Screen Buttons */
+$('#btn-asha-start-screening').addEventListener('click', ()=>{
+  // Go directly to role selection for new patient
+  state.role = null;
+  goTo('screen-role');
+});
+
+$('#btn-asha-view-records').addEventListener('click', ()=>{
+  goTo('screen-asha-dashboard');
+});
 
 /* ============================= CONNECTIVITY (Demo Mode - Simplified) =============================
    For demo kiosk, connectivity banner is removed. System assumes online.
@@ -1915,6 +3142,527 @@ setConnectivityUI(true);
 /* warm up voices list for TTS voice selection */
 window.speechSynthesis?.getVoices();
 window.speechSynthesis?.addEventListener?.('voiceschanged', ()=>{});
+
+/* ============================= WORKFLOW ENGINE ============================= */
+
+// Workflow state management
+const workflowEngine = {
+  active: false,
+  sessionId: null,
+  workflowType: null,
+  definition: null,
+  currentPhase: null,
+  currentQuestionIndex: 0,
+  responses: {},
+  dietInfo: {},
+  testResults: {},
+  score: null,
+  riskLevel: null,
+  awaitingResponse: false,
+  
+  // Load workflow from JSON
+  async loadWorkflow(type){
+    try{
+      const response = await fetch(`workflows/${type}-workflow.json`);
+      return await response.json();
+    }catch(e){
+      console.error('[Workflow] Failed to load workflow:', e);
+      return null;
+    }
+  },
+  
+  // Start workflow
+  async start(type){
+    this.workflowType = type;
+    this.sessionId = generateUUID();
+    this.definition = await this.loadWorkflow(type);
+    
+    if(!this.definition){
+      speak('Sorry, workflow not available. Continuing with basic assessment.');
+      return;
+    }
+    
+    this.currentPhase = this.definition.phases[0];
+    this.active = true;
+    
+    console.log(`[Workflow] Started ${type} workflow`, this.sessionId);
+    
+    // Execute opening phase
+    await this.executePhase(this.currentPhase);
+  },
+  
+  // Execute a phase
+  async executePhase(phase){
+    console.log(`[Workflow] Executing phase: ${phase.phaseId}`);
+    
+    switch(phase.type){
+      case 'consent':
+        await this.showConsent(phase);
+        break;
+      case 'questionnaire':
+        await this.runQuestionnaire(phase);
+        break;
+      case 'clinical':
+        await this.runTests(phase);
+        break;
+      case 'summary':
+        await this.showSummary(phase);
+        break;
+    }
+  },
+  
+  // Show consent message
+  async showConsent(phase){
+    const message = phase.message.hi || phase.message.en;
+    addBubbleWithAAHAEyes('ai', message);
+    await speak(message);
+    
+    // Wait for user consent
+    this.awaitingResponse = true;
+  },
+  
+  // Run questionnaire phase
+  async runQuestionnaire(phase){
+    if(phase.intro){
+      const intro = phase.intro.hi || phase.intro.en;
+      addBubbleWithAAHAEyes('ai', intro);
+      await speak(intro);
+      await sleep(1000);
+    }
+    
+    // Ask questions one by one
+    for(let i = 0; i < phase.questions.length; i++){
+      const question = phase.questions[i];
+      await this.askQuestion(question, phase.phaseId);
+    }
+    
+    // Phase complete - move to next
+    this.moveToNextPhase();
+  },
+  
+  // Ask a single question
+  async askQuestion(question, phaseId){
+    const { id, text, sensitive, followUp } = question;
+    
+    // Gentle pause for sensitive questions
+    if(sensitive){
+      await sleep(500);
+    }
+    
+    // Show AAHA eyes and ask question
+    const questionText = text.hi || text.en;
+    addBubbleWithAAHAEyes('ai', questionText);
+    await speak(questionText);
+    
+    // Wait for response
+    this.awaitingResponse = true;
+    const response = await waitForUserInput();
+    this.awaitingResponse = false;
+    
+    // Store response
+    const storageKey = phaseId === 'diet' ? 'dietInfo' : 'responses';
+    this[storageKey][id] = {
+      answer: response,
+      timestamp: new Date().toISOString()
+    };
+    
+    // Check for follow-up
+    if(followUp){
+      const responseKey = response.toLowerCase().replace(/\s+/g, '_');
+      const followUpConfig = followUp[responseKey] || followUp[response.toLowerCase()];
+      
+      if(followUpConfig){
+        await this.askFollowUp(id, followUpConfig, storageKey);
+      }
+    }
+  },
+  
+  // Ask follow-up question
+  async askFollowUp(parentId, followUpConfig, storageKey){
+    const followUpText = followUpConfig.text.hi || followUpConfig.text.en;
+    addBubbleWithAAHAEyes('ai', followUpText);
+    await speak(followUpText);
+    
+    this.awaitingResponse = true;
+    const response = await waitForUserInput();
+    this.awaitingResponse = false;
+    
+    // Store follow-up
+    if(!this[storageKey][parentId].followUp){
+      this[storageKey][parentId].followUp = {};
+    }
+    this[storageKey][parentId].followUp = response;
+  },
+  
+  // Run clinical tests
+  async runTests(phase){
+    const intro = phase.intro.hi || phase.intro.en;
+    addBubbleWithAAHAEyes('ai', intro);
+    await speak(intro);
+    await sleep(1500);
+    
+    // Filter tests based on conditions
+    const testsToRun = phase.tests.filter(test => {
+      if(!test.conditional) return true;
+      
+      // Check if conditional test should run
+      const condition = test.conditional;
+      const response = this.responses[condition.questionId];
+      if(!response) return false;
+      
+      return condition.values.some(val => 
+        response.answer.toLowerCase().includes(val.toLowerCase())
+      );
+    });
+    
+    console.log(`[Workflow] Running ${testsToRun.length} tests`);
+    
+    // Prepare test queue for individual test flow
+    state.testQueue = testsToRun.map(test => {
+      const device = DEVICES.find(d => d.id === test.testId);
+      if(device){
+        // Add workflow consent message
+        device.workflowConsent = test.consentMessage.hi || test.consentMessage.en;
+      }
+      return device;
+    }).filter(d => d);
+    
+    state.currentTestIndex = 0;
+    state.testResults = {};
+    
+    // Start individual test flow (uses existing test consent system)
+    if(state.testQueue.length > 0){
+      startNextTest();
+    } else {
+      // No tests - move to closing
+      this.moveToNextPhase();
+    }
+  },
+  
+  // Show summary and generate report
+  async showSummary(phase){
+    const message = phase.message.hi || phase.message.en;
+    addBubbleWithAAHAEyes('ai', message);
+    await speak(message);
+    
+    // Calculate score
+    this.calculateScore();
+    
+    // Generate personalized diet advice
+    this.generateDietAdvice();
+    
+    // Store workflow data in state for report
+    state.workflowScore = this.score;
+    state.workflowRisk = this.riskLevel;
+    state.workflowType = this.workflowType;
+    state.workflowResponses = this.responses;
+    state.workflowDietInfo = this.dietInfo;
+    state.workflowDietAdvice = this.dietAdvice;
+    
+    // End workflow
+    this.active = false;
+    
+    // Go to processing then diagnosis
+    setTimeout(() => goTo('screen-processing'), 2000);
+  },
+  
+  // Calculate workflow score
+  calculateScore(){
+    let totalScore = 0;
+    let maxScore = 0;
+    
+    // Iterate symptom questions
+    const symptomPhase = this.definition.phases.find(p => p.phaseId === 'symptoms');
+    
+    if(symptomPhase){
+      symptomPhase.questions.forEach(q => {
+        const response = this.responses[q.id];
+        if(response && q.scoringRules){
+          const answerKey = response.answer.toLowerCase().replace(/\s+/g, '_');
+          const points = q.scoringRules[answerKey] || q.scoringRules[response.answer.toLowerCase()] || 0;
+          const weight = q.weight || 1;
+          totalScore += points * weight;
+          
+          const maxPoints = Math.max(...Object.values(q.scoringRules));
+          maxScore += maxPoints * weight;
+        }
+      });
+    }
+    
+    // Determine risk level
+    const thresholds = this.definition.scoring.thresholds;
+    let riskLevel;
+    if(totalScore <= thresholds.low[1]) riskLevel = 'low';
+    else if(totalScore <= thresholds.moderate[1]) riskLevel = 'moderate';
+    else riskLevel = 'high';
+    
+    this.score = totalScore;
+    this.riskLevel = riskLevel;
+    
+    console.log(`[Workflow] Score: ${totalScore}/${maxScore}, Risk: ${riskLevel}`);
+  },
+  
+  // Generate personalized diet advice
+  generateDietAdvice(){
+    const advice = [];
+    const rules = this.definition.dietRules;
+    
+    // Check each diet rule
+    Object.keys(rules).forEach(ruleKey => {
+      const rule = rules[ruleKey];
+      
+      if(Array.isArray(rule)){
+        // General advice
+        advice.push(...rule.map(r => r.hi || r.en));
+      } else if(rule.trigger){
+        // Conditional advice
+        const questionId = rule.questionId;
+        const response = this.dietInfo[questionId] || this.responses[questionId];
+        
+        if(response){
+          const answerKey = response.answer.toLowerCase().replace(/\s+/g, '_');
+          if(rule.trigger.includes(answerKey) || rule.trigger.includes(response.answer.toLowerCase())){
+            advice.push(rule.advice.hi || rule.advice.en);
+          }
+        }
+      }
+    });
+    
+    this.dietAdvice = advice;
+    console.log(`[Workflow] Generated ${advice.length} diet recommendations`);
+  },
+  
+  // Move to next phase
+  moveToNextPhase(){
+    const phases = this.definition.phases;
+    const currentIndex = phases.findIndex(p => p.phaseId === this.currentPhase.phaseId);
+    
+    if(currentIndex < phases.length - 1){
+      this.currentPhase = phases[currentIndex + 1];
+      this.executePhase(this.currentPhase);
+    } else {
+      console.log('[Workflow] All phases complete');
+    }
+  }
+};
+
+// Helper: Add bubble with AAHA eyes
+function addBubbleWithAAHAEyes(role, text){
+  if(role === 'ai'){
+    showAAHAEyesInChat();
+  }
+  addBubble(role, text);
+}
+
+// Helper: Show AAHA eyes in chat
+function showAAHAEyesInChat(){
+  const scroll = $('#chat-scroll');
+  
+  // Check if eyes already shown recently
+  const lastChild = scroll.lastElementChild;
+  if(lastChild && lastChild.classList.contains('chat-aaha-avatar')){
+    return; // Don't add duplicate eyes
+  }
+  
+  const aahaAvatar = document.createElement('div');
+  aahaAvatar.className = 'chat-aaha-avatar';
+  aahaAvatar.innerHTML = `
+    <div class="aaha-eyes-container">
+      <div class="eyebrows">
+        <div class="eyebrow left"></div>
+        <div class="eyebrow right"></div>
+      </div>
+      <div class="eyes-row">
+        <div class="aaha-eye left-eye">
+          <div class="pupil"></div>
+        </div>
+        <div class="aaha-eye right-eye">
+          <div class="pupil"></div>
+        </div>
+      </div>
+      <div class="mouth"></div>
+    </div>
+    <div class="chat-aaha-status">AAHA is thinking...</div>
+  `;
+  scroll.appendChild(aahaAvatar);
+  scroll.scrollTop = scroll.scrollHeight;
+  
+  setTimeout(() => {
+    const status = aahaAvatar.querySelector('.chat-aaha-status');
+    if(status) status.textContent = 'AAHA';
+  }, 800);
+}
+
+// Helper: Wait for user input
+function waitForUserInput(){
+  return new Promise(resolve => {
+    const checkInterval = setInterval(() => {
+      if(!workflowEngine.awaitingResponse){
+        clearInterval(checkInterval);
+        // Get last user message
+        const messages = state.chatHistory.filter(m => m.role === 'user');
+        if(messages.length > 0){
+          resolve(messages[messages.length - 1].content);
+        } else {
+          resolve('');
+        }
+      }
+    }, 200);
+  });
+}
+
+// Helper: Sleep function
+function sleep(ms){
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+// Helper: Generate UUID
+function generateUUID(){
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+    const r = Math.random() * 16 | 0;
+    const v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+}
+
+console.log('[Workflow Engine] Loaded successfully');
+
+/* ============================= AVATAR CENTER ANIMATION ============================= */
+
+// Move AAHA avatar to center for key moments
+function centerAAHAAvatar(){
+  const containers = document.querySelectorAll('.aaha-eyes-container');
+  containers.forEach(avatar => {
+    avatar.classList.add('centered');
+  });
+  
+  // Hide original wrapper position to avoid duplication
+  const wrappers = document.querySelectorAll('.aaha-eyes-wrapper');
+  wrappers.forEach(wrapper => {
+    wrapper.classList.add('avatar-space');
+  });
+  
+  // Dim background
+  const activeScreen = document.querySelector('.screen.active');
+  if(activeScreen){
+    activeScreen.classList.add('avatar-centered');
+  }
+}
+
+// Reset AAHA avatar position
+function resetAAHAAvatar(){
+  const containers = document.querySelectorAll('.aaha-eyes-container');
+  containers.forEach(avatar => {
+    avatar.classList.remove('centered');
+  });
+  
+  // Restore wrapper visibility
+  const wrappers = document.querySelectorAll('.aaha-eyes-wrapper');
+  wrappers.forEach(wrapper => {
+    wrapper.classList.remove('avatar-space');
+  });
+  
+  // Remove background dim
+  const screens = document.querySelectorAll('.screen');
+  screens.forEach(screen => screen.classList.remove('avatar-centered'));
+}
+
+/* ============================= TEST GUIDANCE MESSAGES ============================= */
+
+const TEST_GUIDANCE = {
+  bp: {
+    before: "We're now ready to perform your Blood Pressure test. This will take only a few seconds. May I begin?",
+    during: "Please sit comfortably. Keep your arm relaxed and avoid talking while the measurement is in progress.",
+    durationSec: 30
+  },
+  spo2: {
+    before: "We're now ready to check your Oxygen level. This is a quick and painless test. May I begin?",
+    during: "Please place your finger inside the sensor until the reading is complete. Keep your hand steady.",
+    durationSec: 15
+  },
+  ecg: {
+    before: "We're now ready to perform an ECG to check your heart rhythm. This will take about a minute. May I begin?",
+    during: "Please remain still while the ECG recording is in progress. Relax and breathe normally.",
+    durationSec: 45
+  },
+  glucose: {
+    before: "We're now ready to check your Blood Sugar level. You'll feel a small prick. May I begin?",
+    during: "Please hold still for a moment while we collect the sample.",
+    durationSec: 20
+  },
+  hb: {
+    before: "We're now ready to check your Hemoglobin level. This requires a small finger prick. May I begin?",
+    during: "Please hold still. This will only take a minute.",
+    durationSec: 60
+  },
+  steth: {
+    before: "Let's check your chest sounds now. This is completely painless. May I begin?",
+    during: "Please breathe normally while we listen to your chest sounds.",
+    durationSec: 40
+  }
+};
+
+/* ============================= MINI RESULT EXPLANATIONS ============================= */
+
+const MINI_RESULT_EXPLANATIONS = {
+  bp: {
+    normal: "Great. Your blood pressure is within the healthy range.",
+    monitor: "Your blood pressure appears slightly elevated. We recommend monitoring it regularly.",
+    alert: "Your blood pressure reading is higher than recommended. We'll discuss this in your wellness report."
+  },
+  spo2: {
+    normal: "Excellent. Your oxygen level is in the healthy range.",
+    monitor: "Your oxygen level is slightly below the optimal range. Let's keep an eye on this.",
+    alert: "Your oxygen level needs attention. We'll include this in your assessment."
+  },
+  glucose: {
+    normal: "Perfect. Your blood sugar is within the healthy range.",
+    monitor: "Your blood sugar appears slightly higher than the recommended range. We'll include this observation in today's wellness report.",
+    alert: "Your blood sugar reading requires medical attention. Your clinician will review this."
+  },
+  ecg: {
+    normal: "Great. Your heart rhythm is normal and regular.",
+    monitor: "We've recorded your heart rhythm. Your clinician will review the complete reading.",
+    alert: "We've captured your heart rhythm. A doctor will review this carefully."
+  },
+  hb: {
+    normal: "Excellent. Your hemoglobin level is in the healthy range.",
+    monitor: "Your hemoglobin appears lower than optimal. This is common and treatable.",
+    alert: "Your hemoglobin level needs attention. We'll discuss iron-rich foods and next steps."
+  },
+  steth: {
+    normal: "Good. Your chest sounds are clear with no abnormalities.",
+    monitor: "Your chest sounds have been recorded. Your clinician will review them.",
+    alert: "We've recorded your chest sounds. A doctor will review these carefully."
+  }
+};
+
+/* ============================= CONVERSATIONAL LANGUAGE ============================= */
+
+// Make technical terms conversational and empathetic
+function makeConversational(text){
+  const replacements = {
+    'Error': 'We encountered a temporary issue',
+    'Failed': 'We couldn\'t complete',
+    'Invalid': 'We need to double-check',
+    'Timeout': 'This is taking longer than expected',
+    'Connection lost': 'We\'re temporarily unable to connect',
+    'Server error': 'Our processing service is temporarily unavailable',
+    'API error': 'Our processing service is temporarily unavailable',
+    '404': 'We couldn\'t find this information',
+    '500': 'We\'re experiencing a temporary service interruption',
+    'Machine error': 'The device wasn\'t able to capture a reliable reading'
+  };
+  
+  let result = text;
+  Object.keys(replacements).forEach(old => {
+    const regex = new RegExp(old, 'gi');
+    result = result.replace(regex, replacements[old]);
+  });
+  
+  return result;
+}
+
 </script>
 </body>
 </html>

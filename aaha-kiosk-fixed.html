@@ -600,6 +600,15 @@ canvas{width:100%; height:220px; border-radius:16px; background:rgba(0,0,0,0.35)
         <div class="asha-header">
           <h2>👩‍⚕️ ASHA Worker View</h2>
         </div>
+        <!-- Greeting & Today's Summary -->
+        <div id="asha-greeting" style="background:#E7F8F0;padding:16px;border-radius:12px;margin-bottom:16px;border:1px solid #10B981;">
+          <div style="font-size:18px;font-weight:800;color:#10B981;margin-bottom:8px;">🙏 Namaste, ASHA Worker!</div>
+          <div id="asha-summary" style="font-size:14px;color:#0B1220;font-weight:600;line-height:1.6;">
+            <div>📊 Today's Summary: <span id="today-patients">0</span> patients screened</div>
+            <div>⚑ <span id="today-flagged">0</span> cases flagged for review</div>
+            <div>📅 <span id="today-date"></span></div>
+          </div>
+        </div>
         <input class="asha-search" id="asha-search" placeholder="Search by name, village or phone...">
         <div class="asha-patients" id="asha-patients"></div>
         <button class="btn btn-ghost" id="btn-asha-logout">⎋ Log Out</button>
@@ -824,23 +833,35 @@ function finishIntroVideo(){
 $('#btn-skip-video').addEventListener('click', finishIntroVideo);
 
 function startKiosk(){
+  console.log('🚀 Starting AAHA Kiosk...');
   goTo('screen-splash');
+  console.log('✅ Splash screen loaded');
   
   // Allow manual click/tap to proceed immediately
   let proceeded = false;
   const proceedToVideo = () => {
     if(proceeded) return;
     proceeded = true;
+    console.log('▶️ Proceeding to video screen...');
     $('#topbar').classList.add('visible'); 
     goTo('screen-video');
+    console.log('✅ Video screen loaded');
   };
   
   // Click anywhere on splash screen to continue
-  $('#screen-splash').addEventListener('click', proceedToVideo, {once: true});
+  const splashScreen = $('#screen-splash');
+  if(splashScreen) {
+    console.log('👆 Click listener added to splash screen');
+    splashScreen.addEventListener('click', proceedToVideo, {once: true});
+  } else {
+    console.error('❌ Splash screen element not found!');
+  }
   
   // Screen 1: Auto-transition after 3 seconds
+  console.log('⏱️ Auto-transition will happen in 3 seconds...');
   setTimeout(proceedToVideo, 3000);
 }
+console.log('📄 Script loaded, starting kiosk...');
 startKiosk();
 
 /* ============================= SCREEN 3: WELCOME / ROLE SELECT ============================= */
@@ -998,14 +1019,6 @@ function setSuggested(list){
     row.appendChild(c);
   });
 }
-
-const AAHA_SYSTEM_PROMPT = `You are AAHA, an empathetic AI health assistant at an Indian Primary Health Centre.
-
-CONVERSATION STYLE:
-- Speak warmly in simple Hindi/English mix (natural Indian PHC style)
-- Keep responses to 2-3 short sentences maximum
-- Be caring but efficient - time is precious at a busy PHC
-- Use "aap" for respect, avoid medical jargon
 
 // ========== GOOGLE GEMINI AI INTEGRATION ==========
 const GEMINI_API_KEY = 'AIzaSyAb8RN6JBfMpl4BPIE6ofQIRtYpCOS4EnnvJa3Xh7UDR-57Y0bg';
@@ -1805,6 +1818,29 @@ function renderAshaDashboard(filterText){
   const db = loadDB();
   const listEl = $('#asha-patients');
   const entries = Object.entries(db).filter(([phone, rec])=> rec.profile && rec.profile.name);
+  
+  // Calculate today's summary
+  const today = new Date().toDateString();
+  let todayPatients = 0;
+  let todayFlagged = 0;
+  
+  entries.forEach(([phone, rec]) => {
+    rec.visits.forEach(visit => {
+      const visitDate = new Date(visit.timestamp).toDateString();
+      if(visitDate === today) {
+        todayPatients++;
+        if(visit.flagged) todayFlagged++;
+      }
+    });
+  });
+  
+  // Update greeting summary
+  $('#today-patients').textContent = todayPatients;
+  $('#today-flagged').textContent = todayFlagged;
+  $('#today-date').textContent = new Date().toLocaleDateString('en-IN', { 
+    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' 
+  });
+  
   const q = (filterText||'').trim().toLowerCase();
   const filtered = entries.filter(([phone, rec])=>{
     if(!q) return true;

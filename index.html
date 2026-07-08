@@ -28,6 +28,9 @@
   --fs-title:32px;
   --fs-subtitle:24px;
   --fs-body:18px;
+  --ember:#F5C267;
+  --ember-deep:#B97A1E;
+  --amber:#F0A22B;
 }
 *{box-sizing:border-box; margin:0; padding:0;}
 html,body{height:100%;}
@@ -78,11 +81,12 @@ body{
   opacity:0; pointer-events:none; transition:opacity .5s ease;
 }
 #topbar.visible{opacity:1; pointer-events:auto;}
-#topbar .left{display:flex; align-items:center; gap:10px; font-size:15px;}
-#topbar .brandmark{width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,var(--secondary),var(--primary)); display:flex;align-items:center;justify-content:center; position:relative;}
-#topbar .brandmark::before,#topbar .brandmark::after{content:'';position:absolute;background:#fff;border-radius:2px;}
-#topbar .brandmark::before{width:12px;height:3px;}
-#topbar .brandmark::after{width:3px;height:12px;}
+#topbar .left{display:flex; align-items:center; gap:12px; font-size:15px;}
+#topbar .brandmark{
+  width:50px; height:40px;
+  display:flex; align-items:center; justify-content:center;
+  position:relative;
+}
 #topbar .right{display:flex; align-items:center; gap:18px; font-size:14px; font-variant-numeric:tabular-nums; color:var(--muted);}
 #topbar .right svg{display:block;}
 #topbar .battery-pct{font-size:12px; opacity:.8; margin-left:2px;}
@@ -225,6 +229,140 @@ body{
 }
 .orb-face-simple .s-eye.left{background:linear-gradient(160deg,#FDE68A,#F59E0B);}
 .orb-face-simple .s-eye.right{background:linear-gradient(160deg,#F59E0B,#B45309); animation-delay:.15s;}
+
+/* ============================================
+   AAHA EYE AVATAR — Reusable Animated Eyes
+   States: asleep | idle | listening | speaking | glance | happy | calm
+   ============================================= */
+.aaha{
+  position:relative;
+  width:150px;
+  height:150px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  transition:transform .8s ease;
+}
+.aaha .ring{
+  position:absolute;
+  border-radius:50%;
+  border:1.5px solid var(--ember-deep);
+  opacity:0;
+  pointer-events:none;
+}
+.aaha .r1{inset:0;}
+.aaha .r2{inset:22px; border-color:var(--amber);}
+.aaha.listening .ring,
+.aaha.calm .ring{
+  filter:drop-shadow(0 0 7px rgba(245,194,103,.28));
+}
+.aaha .eyes{
+  display:flex;
+  gap:10px;
+  transition:transform .7s ease;
+  position:relative;
+  align-items:center;
+}
+.aaha .eye{
+  width:42px;
+  height:55px;
+  background:var(--ember);
+  border-radius:21px;
+  transition:height .5s ease, border-radius .5s ease, transform .5s ease, opacity .8s ease;
+  transform-origin:center;
+  box-shadow:0 3px 12px rgba(245,194,103,0.3);
+}
+/* Center nose circle between eyes */
+.aaha .eyes::after{
+  content:'';
+  position:absolute;
+  width:20px;
+  height:20px;
+  border-radius:50%;
+  background:var(--ember-deep);
+  left:50%;
+  top:50%;
+  transform:translate(-50%, -50%);
+  box-shadow:0 2px 6px rgba(185,122,30,0.3);
+  z-index:1;
+}
+.aaha .glowdot{
+  position:absolute;
+  width:14px;
+  height:14px;
+  border-radius:50%;
+  background:var(--ember-deep);
+  opacity:0;
+  transition:opacity 1s ease;
+  animation:emberPulse 4s ease-in-out infinite;
+}
+
+/* ---------- AAHA States ---------- */
+.aaha.asleep .eye{
+  height:6px;
+  border-radius:3px;
+  opacity:0.3;
+}
+.aaha.asleep .glowdot{
+  opacity:.85;
+}
+.aaha.idle .eye{
+  animation:aahaBlink 5.2s infinite;
+}
+.aaha.listening .eye{
+  height:60px;
+  animation:aahaBlink 6s infinite;
+}
+.aaha.listening .r1{
+  animation:aahaRipple 3s ease-out infinite;
+}
+.aaha.listening .r2{
+  animation:aahaRipple 3s ease-out infinite 1s;
+}
+.aaha.speaking .eye{
+  animation:aahaBlink 5.2s infinite;
+}
+.aaha.speaking .r2{
+  animation:aahaBreathe 2.6s ease-in-out infinite;
+  opacity:.5;
+}
+.aaha.glance .eyes{
+  transform:translateX(26px);
+}
+.aaha.happy .eye{
+  height:30px;
+  border-radius:21px 21px 10px 10px;
+  transform:translateY(-5px);
+}
+.aaha.calm .r2{
+  animation:aahaBreatheBig 4.5s ease-in-out infinite;
+  opacity:.6;
+}
+.aaha.calm .eye{
+  animation:aahaBlink 7s infinite;
+}
+
+/* ---------- AAHA Keyframes ---------- */
+@keyframes aahaBlink{
+  0%, 93%, 100%{transform:scaleY(1);}
+  96%{transform:scaleY(.08);}
+}
+@keyframes aahaRipple{
+  0%{transform:scale(.88); opacity:.55;}
+  100%{transform:scale(1.22); opacity:0;}
+}
+@keyframes aahaBreathe{
+  0%, 100%{transform:scale(1);}
+  50%{transform:scale(1.07);}
+}
+@keyframes aahaBreatheBig{
+  0%, 100%{transform:scale(.95);}
+  50%{transform:scale(1.14);}
+}
+@keyframes emberPulse{
+  0%, 100%{transform:scale(1); opacity:.7;}
+  50%{transform:scale(1.25); opacity:1;}
+}
 
 /* waveform bars used inside/around orb + listening screen */
 .waveform{display:flex; align-items:center; gap:5px; height:60px;}
@@ -662,35 +800,52 @@ canvas{width:100%; height:220px; border-radius:16px; background:rgba(0,0,0,0.35)
 
   <div id="topbar">
     <div class="left">
-      <div class="brandmark"></div>
-      <span>AAHA · Primary Health Centre Kiosk</span>
+      <div class="brandmark">
+        <div class="aaha idle" style="width:50px; height:50px; transform:scale(0.7);">
+          <div class="ring r1"></div>
+          <div class="ring r2"></div>
+          <div class="glowdot"></div>
+          <div class="eyes">
+            <div class="eye" style="width:12px; height:18px;"></div>
+            <div class="eye" style="width:12px; height:18px;"></div>
+          </div>
+        </div>
+      </div>
+      <span>AAHA AI Wellness PHC</span>
     </div>
     <div class="right">
       <span id="clock">--:--</span>
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9FC0FF" stroke-width="2"><path d="M12 2v20M17 7L7 17M7 7l10 10"/></svg>
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9FC0FF" stroke-width="2"><path d="M2 8.5a15 15 0 0 1 20 0M5 12a10 10 0 0 1 14 0M8.5 15.5a5 5 0 0 1 7 0M12 19h.01"/></svg>
-      <span style="display:flex;align-items:center;">
-        <svg width="26" height="14" viewBox="0 0 26 14" fill="none"><rect x="1" y="1" width="21" height="12" rx="3" stroke="#9FC0FF" stroke-width="1.5"/><rect x="23" y="4.5" width="2" height="5" fill="#9FC0FF"/><rect x="3" y="3" width="15" height="8" rx="1.5" fill="#10B981"/></svg>
-        <span class="battery-pct">82%</span>
-      </span>
     </div>
+  </div>
   </div>
 
   <!-- SCREEN 1: ATTRACTIVE AAHA LOGO -->
   <section class="screen active" id="screen-splash">
-    <div class="orb-slot"><div class="orb-wrap" id="splash-orb">
-      <div class="orb-face-simple"><span class="s-eye left"></span><span class="s-eye right"></span></div>
-    </div></div>
+    <!-- Medical Plus Icon -->
+    <div style="width:120px; height:120px; border-radius:28px; background:linear-gradient(135deg,var(--secondary),var(--primary)); display:flex; align-items:center; justify-content:center; position:relative; box-shadow:0 20px 60px rgba(37,99,235,0.4); margin-bottom:30px;">
+      <svg width="70" height="70" viewBox="0 0 24 24" fill="none">
+        <rect x="10" y="4" width="4" height="16" rx="1.5" fill="#fff"/>
+        <rect x="4" y="10" width="16" height="4" rx="1.5" fill="#fff"/>
+      </svg>
+    </div>
     <div style="font-size:48px; font-weight:900; letter-spacing:2px; margin-top:10px;">AAHA</div>
-    <div style="font-size:16px; color:var(--muted); font-weight:600; letter-spacing:3px; margin-top:6px;">AI HEALTH SCREENING KIOSK</div>
+    <div style="font-size:16px; color:var(--muted); font-weight:600; letter-spacing:3px; margin-top:6px;">AI WELLNESS PHC</div>
     <div style="margin-top:40px; font-size:14px; color:var(--muted); animation: blink 2s infinite;">Tap anywhere to continue</div>
   </section>
 
   <!-- SCREEN 2: PRE-RECORDED AAHA VIDEO (5-10 seconds) -->
   <section class="screen" id="screen-video">
-    <div class="orb-slot"><div class="orb-wrap" id="video-orb">
-      <div class="orb-face-simple"><span class="s-eye left"></span><span class="s-eye right"></span></div>
-    </div></div>
+    <div class="orb-slot">
+      <div class="aaha speaking" id="video-aaha">
+        <div class="ring r1"></div>
+        <div class="ring r2"></div>
+        <div class="glowdot"></div>
+        <div class="eyes">
+          <div class="eye"></div>
+          <div class="eye"></div>
+        </div>
+      </div>
+    </div>
     <div class="speak-caption" id="speak-caption">"Namaste! Main AAHA hoon — aapki sehat ki saathi."</div>
     <div class="speak-subcaption" id="speak-subcaption">Your AI-powered health companion at the Primary Health Centre</div>
     <div class="video-progress-track"><div class="video-progress-fill" id="video-fill"></div></div>
@@ -710,7 +865,7 @@ canvas{width:100%; height:220px; border-radius:16px; background:rgba(0,0,0,0.35)
     <div class="prompt-line" style="margin-top:34px; margin-bottom:2px; font-size:16px; color:var(--muted); text-transform:uppercase; letter-spacing:1px;">I am a...</div>
     <div class="role-row">
       <div class="choice-card glass-card" id="btn-role-patient">
-        <span class="emoji">🧑‍🦱</span>
+        <span class="emoji">🤒</span>
         <div class="ctitle">I am a Patient</div>
         <div class="csub">Get screened &amp; see your own reports</div>
       </div>
@@ -792,22 +947,16 @@ canvas{width:100%; height:220px; border-radius:16px; background:rgba(0,0,0,0.35)
   <!-- NEW: SCREEN 6A - TEST CONSENT (for each test) -->
   <section class="screen" id="screen-test-consent">
     <div class="test-consent-panel glass-card" style="width:600px; padding:50px; text-align:center;">
-      <!-- AAHA Cartoon Face (centered, blinking) -->
-      <div class="aaha-eyes-wrapper" style="display:flex; justify-content:center; margin-bottom:30px;">
-        <div class="aaha-eyes-container" id="consent-eyes">
-          <div class="eyebrows">
-            <div class="eyebrow left"></div>
-            <div class="eyebrow right"></div>
+      <!-- AAHA Animated Eyes (centered, listening) -->
+      <div style="display:flex; justify-content:center; margin-bottom:30px;">
+        <div class="aaha listening" id="consent-eyes">
+          <div class="ring r1"></div>
+          <div class="ring r2"></div>
+          <div class="glowdot"></div>
+          <div class="eyes">
+            <div class="eye"></div>
+            <div class="eye"></div>
           </div>
-          <div class="eyes-row">
-            <div class="aaha-eye left-eye">
-              <div class="pupil"></div>
-            </div>
-            <div class="aaha-eye right-eye">
-              <div class="pupil"></div>
-            </div>
-          </div>
-          <div class="mouth"></div>
         </div>
       </div>
       
@@ -832,22 +981,16 @@ canvas{width:100%; height:220px; border-radius:16px; background:rgba(0,0,0,0.35)
   <!-- NEW: SCREEN 6B - TEST EXECUTION (running test with AAHA) -->
   <section class="screen" id="screen-test-running">
     <div class="test-running-panel glass-card" style="width:600px; padding:50px; text-align:center;">
-      <!-- AAHA Cartoon Face (centered, thinking) -->
-      <div class="aaha-eyes-wrapper" style="display:flex; justify-content:center; margin-bottom:30px;">
-        <div class="aaha-eyes-container thinking" id="running-eyes">
-          <div class="eyebrows">
-            <div class="eyebrow left"></div>
-            <div class="eyebrow right"></div>
+      <!-- AAHA Animated Eyes (centered, calm/measuring) -->
+      <div style="display:flex; justify-content:center; margin-bottom:30px;">
+        <div class="aaha calm" id="running-eyes">
+          <div class="ring r1"></div>
+          <div class="ring r2"></div>
+          <div class="glowdot"></div>
+          <div class="eyes">
+            <div class="eye"></div>
+            <div class="eye"></div>
           </div>
-          <div class="eyes-row">
-            <div class="aaha-eye left-eye">
-              <div class="pupil"></div>
-            </div>
-            <div class="aaha-eye right-eye">
-              <div class="pupil"></div>
-            </div>
-          </div>
-          <div class="mouth"></div>
         </div>
       </div>
       
@@ -869,6 +1012,19 @@ canvas{width:100%; height:220px; border-radius:16px; background:rgba(0,0,0,0.35)
   <!-- NEW: SCREEN 6C - MINI TEST RESULT -->
   <section class="screen" id="screen-test-result">
     <div class="test-result-panel glass-card" style="width:600px; padding:50px; text-align:center;">
+      <!-- AAHA Animated Eyes (centered, happy for good result) -->
+      <div style="display:flex; justify-content:center; margin-bottom:30px;">
+        <div class="aaha happy" id="result-eyes">
+          <div class="ring r1"></div>
+          <div class="ring r2"></div>
+          <div class="glowdot"></div>
+          <div class="eyes">
+            <div class="eye"></div>
+            <div class="eye"></div>
+          </div>
+        </div>
+      </div>
+      
       <div id="result-status-icon" style="font-size:80px; margin-bottom:20px;">✅</div>
       <h2 id="result-test-name" style="font-size:28px; font-weight:800; margin-bottom:20px; color:var(--ink);">Blood Pressure Result</h2>
       
@@ -892,22 +1048,16 @@ canvas{width:100%; height:220px; border-radius:16px; background:rgba(0,0,0,0.35)
   <!-- NEW: SCREEN 6D - TEST ERROR HANDLING -->
   <section class="screen" id="screen-test-error">
     <div class="test-error-panel glass-card" style="width:600px; padding:50px; text-align:center;">
-      <!-- AAHA Cartoon Face (centered, concerned) -->
-      <div class="aaha-eyes-wrapper" style="display:flex; justify-content:center; margin-bottom:30px;">
-        <div class="aaha-eyes-container" id="error-eyes">
-          <div class="eyebrows">
-            <div class="eyebrow left"></div>
-            <div class="eyebrow right"></div>
+      <!-- AAHA Animated Eyes (centered, calm during error) -->
+      <div style="display:flex; justify-content:center; margin-bottom:30px;">
+        <div class="aaha calm" id="error-eyes">
+          <div class="ring r1"></div>
+          <div class="ring r2"></div>
+          <div class="glowdot"></div>
+          <div class="eyes">
+            <div class="eye"></div>
+            <div class="eye"></div>
           </div>
-          <div class="eyes-row">
-            <div class="aaha-eye left-eye">
-              <div class="pupil"></div>
-            </div>
-            <div class="aaha-eye right-eye">
-              <div class="pupil"></div>
-            </div>
-          </div>
-          <div class="mouth"></div>
         </div>
       </div>
       
@@ -1279,6 +1429,27 @@ function finishIntroVideo(){
 }
 $('#btn-skip-video').addEventListener('click', finishIntroVideo);
 
+/* ============================= AAHA EYES HELPER ============================= */
+// Helper function to create AAHA animated eyes HTML
+function createAAHAEyes(state = 'idle', size = 'normal'){
+  const sizeMap = {
+    small: 'width:80px; height:80px;',
+    normal: 'width:150px; height:150px;',
+    large: 'width:200px; height:200px;'
+  };
+  return `
+    <div class="aaha ${state}" style="${sizeMap[size]}">
+      <div class="ring r1"></div>
+      <div class="ring r2"></div>
+      <div class="glowdot"></div>
+      <div class="eyes">
+        <div class="eye"></div>
+        <div class="eye"></div>
+      </div>
+    </div>
+  `;
+}
+
 function startKiosk(){
   console.log('🚀 Starting AAHA Kiosk...');
   goTo('screen-splash');
@@ -1447,30 +1618,17 @@ function addBubble(role, text){
     const aahaAvatar = document.createElement('div');
     aahaAvatar.className = 'chat-aaha-avatar';
     aahaAvatar.innerHTML = `
-      <div class="aaha-eyes-container">
-        <div class="eyebrows">
-          <div class="eyebrow left"></div>
-          <div class="eyebrow right"></div>
+      <div class="aaha idle" style="width:100px; height:100px;">
+        <div class="ring r1"></div>
+        <div class="ring r2"></div>
+        <div class="glowdot"></div>
+        <div class="eyes">
+          <div class="eye"></div>
+          <div class="eye"></div>
         </div>
-        <div class="eyes-row">
-          <div class="aaha-eye left-eye">
-            <div class="pupil"></div>
-          </div>
-          <div class="aaha-eye right-eye">
-            <div class="pupil"></div>
-          </div>
-        </div>
-        <div class="mouth"></div>
       </div>
-      <div class="chat-aaha-status">AAHA is thinking...</div>
     `;
     scroll.appendChild(aahaAvatar);
-    
-    // Update status after a moment
-    setTimeout(() => {
-      const status = aahaAvatar.querySelector('.chat-aaha-status');
-      if(status) status.textContent = 'AAHA';
-    }, 800);
   }
   
   const b = document.createElement('div');
@@ -1636,6 +1794,23 @@ let chatTurns = 0;
 async function sendChat(text){
   if(!text || !text.trim()) return;
   
+  // If general health mode is active, handle response
+  if(workflowEngine.generalHealthMode && workflowEngine.awaitingResponse){
+    addBubble('user', text);
+    state.chatHistory.push({role:'user', content:text});
+    $('#chat-input').value='';
+    
+    // Process based on current stage
+    if(workflowEngine.currentComplaintName){
+      // Answering complaint follow-up questions
+      await workflowEngine.processComplaintAnswer(text);
+    } else if(workflowEngine.currentRedFlag){
+      // Answering red flag questions
+      await workflowEngine.processRedFlagAnswer(text);
+    }
+    return;
+  }
+  
   // If workflow active, handle response
   if(workflowEngine.active && workflowEngine.awaitingResponse){
     addBubble('user', text);
@@ -1662,6 +1837,39 @@ async function sendChat(text){
   state.chatHistory.push({role:'user', content:text});
   $('#chat-input').value='';
   setSuggested([]);
+  
+  // ===== GENERAL HEALTH: DETECT COMPLAINTS ON FIRST MESSAGE =====
+  if(chatTurns === 0 && !workflowEngine.active){
+    const detectedComplaints = ComplaintLibrary.detectComplaints(text);
+    
+    if(detectedComplaints.length > 0){
+      console.log('[General Health] Detected complaints:', detectedComplaints.map(c => c.name));
+      
+      // Acknowledge complaint
+      const acknowledgments = {
+        headache: 'Sar dard ho raha hai. Main samajh sakti hoon.',
+        tiredness: 'Thakaan mehsoos ho rahi hai. Batayein.',
+        fever: 'Bukhar hai. Theek hai.',
+        cough: 'Khansi hai. Chalo detail mein samajhte hain.',
+        dizziness: 'Chakkar aa rahe hain. Main jaanti hoon.',
+        bodyache: 'Dard ho raha hai. Batayein kahan.'
+      };
+      
+      const firstComplaint = detectedComplaints[0].name;
+      const ack = acknowledgments[firstComplaint] || 'Main samajh gayi.';
+      
+      addBubbleWithAAHAEyes('ai', ack);
+      await speak(ack);
+      await sleep(1000);
+      
+      // Start general health workflow
+      await workflowEngine.startGeneralHealthWorkflow(detectedComplaints);
+      chatTurns++;
+      return;
+    }
+  }
+  
+  // ===== CONTINUE WITH AI CONVERSATION =====
   showThinking();
   
   const reply = await callGemini(state.chatHistory);
@@ -1901,8 +2109,8 @@ function initChatScreen(){
   addBubble('ai', opener);
   state.chatHistory.push({role:'assistant', content: opener});
   
-  // Set initial contextual suggestions
-  setSuggested(['🤒 Bukhar hai', '😫 Dard hai', '😴 Kamzori mehsoos hoti hai', '🩺 General checkup']);
+  // Set initial contextual suggestions (emojis removed for clean UI)
+  setSuggested(['Bukhar hai', 'Dard hai', 'Kamzori mehsoos hoti hai', 'General checkup']);
   
   // Speak the opening (shortened for TTS)
   const ttsOpener = state.returningPatient 
@@ -3143,10 +3351,124 @@ setConnectivityUI(true);
 window.speechSynthesis?.getVoices();
 window.speechSynthesis?.addEventListener?.('voiceschanged', ()=>{});
 
+/* ============================= GENERAL HEALTH COMPLAINT LIBRARY ============================= */
+
+const ComplaintLibrary = {
+  complaints: {
+    headache: {
+      keywords: ['sar dard', 'headache', 'sir dard', 'head pain', 'माथा दर्द', 'sar'],
+      followUpQuestions: [
+        {id: 'headache_duration', text: {hi: 'Kab se ho raha hai?', en: 'Since when?'}, type: 'text'},
+        {id: 'headache_frequency', text: {hi: 'Roz hota hai, ya kabhi kabhi?', en: 'Daily or sometimes?'}, type: 'choice', options: ['रोज/daily', 'कभी-कभी/sometimes', 'कम/rarely']},
+        {id: 'headache_location', text: {hi: 'Kahan zyada mehsoos hota hai — maathe par ya peeche?', en: 'Where do you feel it — forehead or back?'}, type: 'text'},
+        {id: 'headache_timing', text: {hi: 'Din mein kab zyada hota hai?', en: 'What time is worse?'}, type: 'text'}
+      ],
+      redFlags: [
+        {id: 'sudden_worst', text: {hi: 'Ye dard achanak, sabse tez tarah se toh nahin aaya?', en: 'Sudden worst ever headache?'}, urgent: true},
+        {id: 'neuro_signs', text: {hi: 'Kamzori, nazron mein dikkat, ya confusion?', en: 'Weakness, vision loss, confusion?'}, urgent: true}
+      ],
+      testsRecommended: ['bp', 'glucose', 'hemoglobin'],
+      routeTo: ['thyroid', 'anaemia']
+    },
+    tiredness: {
+      keywords: ['thakaan', 'tired', 'fatigue', 'kamzori', 'weakness', 'थकान', 'कमजोरी', 'थक'],
+      followUpQuestions: [
+        {id: 'tired_duration', text: {hi: 'Kab se mehsoos ho rahi hai?', en: 'Since when?'}, type: 'text'},
+        {id: 'tired_sleep', text: {hi: 'Poori neend ke baad bhi thakaan?', en: 'Tired even after sleep?'}, type: 'yesno'},
+        {id: 'cold_feeling', text: {hi: 'Thand zyada lagti hai?', en: 'Feeling cold?'}, type: 'yesno'},
+        {id: 'weight_change', text: {hi: 'Wajan mein badlaav — badha ya kam hua?', en: 'Weight changes — increased or decreased?'}, type: 'choice', options: ['बढ़ा/increased', 'कम हुआ/decreased', 'वही है/same']}
+      ],
+      redFlags: [
+        {id: 'weight_loss', text: {hi: 'Bina koshish ke wajan kam hua?', en: 'Unintentional weight loss?'}, urgent: true},
+        {id: 'breathless', text: {hi: 'Aaram karte waqt bhi saans phoolti hai?', en: 'Breathlessness at rest?'}, urgent: true}
+      ],
+      testsRecommended: ['hemoglobin', 'bp', 'glucose'],
+      routeTo: ['anaemia', 'thyroid', 'diabetes']
+    },
+    fever: {
+      keywords: ['bukhar', 'fever', 'temperature', 'गर्मी', 'बुखार'],
+      followUpQuestions: [
+        {id: 'fever_duration', text: {hi: 'Kitne din se?', en: 'How many days?'}, type: 'number'},
+        {id: 'fever_chills', text: {hi: 'Kapkapti/thandi lagti hai?', en: 'Chills/rigors?'}, type: 'yesno'},
+        {id: 'fever_rash', text: {hi: 'Koi rash hai body pe?', en: 'Any rash on body?'}, type: 'yesno'}
+      ],
+      redFlags: [
+        {id: 'high_fever_long', text: {hi: 'Tez bukhar 3 din se zyada?', en: 'High fever >3 days?'}, urgent: true},
+        {id: 'breathless_fever', text: {hi: 'Saans phoolti hai?', en: 'Breathlessness?'}, urgent: true}
+      ],
+      testsRecommended: ['temperature', 'bp', 'spo2'],
+      routeTo: ['physician_referral']
+    },
+    cough: {
+      keywords: ['khansi', 'cough', 'खांसी'],
+      followUpQuestions: [
+        {id: 'cough_duration', text: {hi: 'Kitne din se?', en: 'How many days?'}, type: 'number'},
+        {id: 'cough_type', text: {hi: 'Khansi sukhi hai ya balgam?', en: 'Dry or with phlegm?'}, type: 'choice', options: ['सूखी/dry', 'बलगम/phlegm']},
+        {id: 'blood_sputum', text: {hi: 'Balgam mein khoon aaya?', en: 'Blood in sputum?'}, type: 'yesno'}
+      ],
+      redFlags: [
+        {id: 'chronic_cough', text: {hi: 'Khansi 3 hafte se zyada?', en: 'Cough >3 weeks?'}, urgent: true},
+        {id: 'blood_cough', text: {hi: 'Khoon aaya hai?', en: 'Blood in cough?'}, urgent: true}
+      ],
+      testsRecommended: ['temperature', 'spo2'],
+      routeTo: ['tb_screening', 'physician_referral']
+    },
+    dizziness: {
+      keywords: ['chakkar', 'dizzy', 'dizziness', 'चक्कर'],
+      followUpQuestions: [
+        {id: 'dizzy_standing', text: {hi: 'Khade hone par hota hai?', en: 'On standing?'}, type: 'yesno'},
+        {id: 'dizzy_faint', text: {hi: 'Behosh hue?', en: 'Fainted?'}, type: 'yesno'}
+      ],
+      redFlags: [
+        {id: 'chest_pain_dizzy', text: {hi: 'Seene mein dard?', en: 'Chest pain?'}, urgent: true}
+      ],
+      testsRecommended: ['bp', 'glucose', 'hemoglobin', 'ecg'],
+      routeTo: ['anaemia', 'cardiac']
+    },
+    bodyache: {
+      keywords: ['dard', 'ache', 'pain', 'body ache', 'jodo me dard', 'दर्द', 'जोड़'],
+      followUpQuestions: [
+        {id: 'pain_location', text: {hi: 'Kaun se joint mein — ghutne, kamar, ya aur kahan?', en: 'Which joints — knee, back, or where?'}, type: 'text'},
+        {id: 'morning_stiff', text: {hi: 'Subah akdapan?', en: 'Morning stiffness?'}, type: 'yesno'}
+      ],
+      redFlags: [],
+      testsRecommended: [],
+      routeTo: ['msk']
+    }
+  },
+
+  detectComplaints(userMessage) {
+    const detected = [];
+    const msgLower = userMessage.toLowerCase();
+    
+    for (const [key, complaint] of Object.entries(this.complaints)) {
+      for (const keyword of complaint.keywords) {
+        if (msgLower.includes(keyword.toLowerCase())) {
+          detected.push({name: key, complaint});
+          break;
+        }
+      }
+    }
+    
+    return detected;
+  }
+};
+
 /* ============================= WORKFLOW ENGINE ============================= */
 
 // Workflow state management
 const workflowEngine = {
+  // General Health Module state
+  generalHealthMode: false,
+  detectedComplaints: [],
+  currentComplaintIndex: 0,
+  currentQuestionInComplaint: 0,
+  currentComplaintName: null,
+  currentQuestion: null,
+  redFlagDetected: false,
+  currentRedFlag: null,
+  redFlagIndex: 0,
+  allRedFlags: [],
   active: false,
   sessionId: null,
   workflowType: null,
@@ -3523,9 +3845,239 @@ function generateUUID(){
     const v = c === 'x' ? r : (r & 0x3 | 0x8);
     return v.toString(16);
   });
-}
+  },
+  
+  // ============================= GENERAL HEALTH MODULE METHODS =============================
+  
+  // Start General Health workflow with detected complaints
+  startGeneralHealthWorkflow(complaints) {
+    this.generalHealthMode = true;
+    this.detectedComplaints = complaints;
+    this.currentComplaintIndex = 0;
+    this.currentQuestionInComplaint = 0;
+    this.responses = {};
+    this.redFlagDetected = false;
+    this.active = true;
+    
+    console.log('[General Health] Started with complaints:', complaints.map(c => c.name));
+    
+    // Start with first complaint or baseline screening
+    if (complaints.length > 0) {
+      this.askNextComplaintQuestion();
+    } else {
+      this.offerBaselineScreening();
+    }
+  },
+  
+  // Ask next question for current complaint
+  async askNextComplaintQuestion() {
+    if (this.currentComplaintIndex >= this.detectedComplaints.length) {
+      // All complaints explored, check red flags
+      await this.checkRedFlags();
+      return;
+    }
+
+    const complaint = this.detectedComplaints[this.currentComplaintIndex].complaint;
+    const complaintName = this.detectedComplaints[this.currentComplaintIndex].name;
+    
+    // Initialize if first question for this complaint
+    if (!this.responses[complaintName]) {
+      this.responses[complaintName] = {};
+      this.currentQuestionInComplaint = 0;
+      
+      // Intro for this complaint
+      const intros = {
+        headache: 'Pehle sar dard ki baat karte hain...',
+        tiredness: 'Thakaan ke baare mein bataiye...',
+        fever: 'Bukhar ke baare mein kuch sawaal hain...',
+        cough: 'Khansi ke baare mein detail mein samajhte hain...',
+        dizziness: 'Chakkar ke baare mein janna hai...',
+        bodyache: 'Dard ke baare mein bataiye...'
+      };
+      
+      const intro = intros[complaintName] || 'Is taklif ke baare mein detail se bataiye...';
+      addBubbleWithAAHAEyes('ai', intro);
+      await speak(intro);
+      await sleep(800);
+    }
+
+    const questions = complaint.followUpQuestions;
+    
+    if (this.currentQuestionInComplaint >= questions.length) {
+      // Move to next complaint
+      this.currentComplaintIndex++;
+      this.currentQuestionInComplaint = 0;
+      await this.askNextComplaintQuestion();
+      return;
+    }
+
+    const question = questions[this.currentQuestionInComplaint];
+    const text = question.text.hi || question.text.en;
+    
+    addBubbleWithAAHAEyes('ai', text);
+    await speak(text);
+    
+    // Store current question for answer processing
+    this.currentQuestion = question;
+    this.currentComplaintName = complaintName;
+    this.awaitingResponse = true;
+  },
+  
+  // Process answer to complaint question
+  async processComplaintAnswer(answer) {
+    if (!this.generalHealthMode || !this.awaitingResponse) return false;
+    
+    this.awaitingResponse = false;
+    
+    // Store response
+    if (!this.responses[this.currentComplaintName]) {
+      this.responses[this.currentComplaintName] = {};
+    }
+    this.responses[this.currentComplaintName][this.currentQuestion.id] = {
+      answer: answer,
+      timestamp: new Date().toISOString()
+    };
+    
+    // Move to next question
+    this.currentQuestionInComplaint++;
+    await this.askNextComplaintQuestion();
+    
+    return true;
+  },
+  
+  // Check red flags for all complaints
+  async checkRedFlags() {
+    console.log('[General Health] Checking red flags...');
+    
+    // Collect all red flags
+    const allRedFlags = [];
+    
+    for (const detected of this.detectedComplaints) {
+      const complaint = detected.complaint;
+      if (complaint.redFlags && complaint.redFlags.length > 0) {
+        allRedFlags.push(...complaint.redFlags.map(f => ({...f, complaintName: detected.name})));
+      }
+    }
+    
+    if (allRedFlags.length > 0) {
+      const intro = 'Kuch zaroori sawaal poochne hain safety ke liye...';
+      addBubbleWithAAHAEyes('ai', intro);
+      await speak(intro);
+      await sleep(1000);
+      
+      this.allRedFlags = allRedFlags;
+      this.redFlagIndex = 0;
+      await this.askRedFlagQuestions();
+    } else {
+      await this.offerBaselineScreening();
+    }
+  },
+  
+  // Ask red flag questions
+  async askRedFlagQuestions() {
+    if (this.redFlagIndex >= this.allRedFlags.length) {
+      // All red flags checked
+      if (this.redFlagDetected) {
+        await this.triggerUrgentReferral();
+      } else {
+        await this.offerBaselineScreening();
+      }
+      return;
+    }
+
+    const flag = this.allRedFlags[this.redFlagIndex];
+    const text = flag.text.hi || flag.text.en;
+    
+    addBubbleWithAAHAEyes('ai', text);
+    await speak(text);
+    
+    // Store for answer processing
+    this.currentRedFlag = flag;
+    this.awaitingResponse = true;
+  },
+  
+  // Process red flag answer
+  async processRedFlagAnswer(answer) {
+    if (!this.generalHealthMode || !this.awaitingResponse) return false;
+    
+    this.awaitingResponse = false;
+    
+    const lowerAnswer = answer.toLowerCase();
+    
+    // Check for positive answer
+    if (lowerAnswer.includes('haan') || lowerAnswer.includes('yes') || lowerAnswer.includes('हाँ')) {
+      if (this.currentRedFlag.urgent) {
+        this.redFlagDetected = true;
+        console.log('[General Health] RED FLAG DETECTED:', this.currentRedFlag.id);
+      }
+    }
+    
+    // Ask next red flag
+    this.redFlagIndex++;
+    await this.askRedFlagQuestions();
+    
+    return true;
+  },
+  
+  // Trigger urgent referral
+  async triggerUrgentReferral() {
+    const message = 'Main samajh sakti hoon. Aapko turant doctor se milna chahiye. Pehle kuch basic checks kar lete hain, phir doctor ko dikhayenge.';
+    addBubbleWithAAHAEyes('ai', message);
+    await speak(message);
+    
+    await sleep(2000);
+    
+    // Flag as urgent in state
+    state.urgentReferral = true;
+    
+    await this.startBaselineScreening();
+  },
+  
+  // Offer baseline screening
+  async offerBaselineScreening() {
+    const message = 'Ab kuch basic checks karte hain jo sabke liye zaroori hain — BP, sugar, height, weight. Aasha didi help karengi.';
+    addBubbleWithAAHAEyes('ai', message);
+    await speak(message);
+    
+    await sleep(2000);
+    
+    await this.startBaselineScreening();
+  },
+  
+  // Start baseline screening with complaint-specific tests
+  async startBaselineScreening() {
+    // Baseline tests for everyone
+    const baselineTestIds = ['bp', 'glucose', 'spo2', 'temperature', 'ecg'];
+    
+    // Add complaint-specific tests
+    for (const detected of this.detectedComplaints) {
+      const recommended = detected.complaint.testsRecommended || [];
+      baselineTestIds.push(...recommended);
+    }
+    
+    // Remove duplicates
+    const uniqueTestIds = [...new Set(baselineTestIds)];
+    
+    // Map to devices and pre-select
+    selectedDevices = [];
+    uniqueTestIds.forEach(testId => {
+      const device = DEVICES.find(d => d.id === testId);
+      if (device && !selectedDevices.find(d => d.id === device.id)) {
+        selectedDevices.push(device);
+      }
+    });
+    
+    console.log('[General Health] Baseline tests selected:', selectedDevices.map(d => d.name));
+    
+    // Show test screen
+    showScreen('screen-recommended');
+    renderDeviceGrid();
+    updateCTA();
+  }
+};
 
 console.log('[Workflow Engine] Loaded successfully');
+console.log('[General Health Module] Loaded successfully');
 
 /* ============================= AVATAR CENTER ANIMATION ============================= */
 
